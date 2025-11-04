@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>เข้าสู่ระบบ IPTV</title>
+  <style>
+    :root{
+      --bg1:#0f172a;
+      --bg2:#0b1220;
+      --accent1:#7c3aed;
+      --accent2:#06b6d4;
+      --muted: rgba(255,255,255,0.7);
+      --error:#ef4444;
+      --success:#10b981;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;display:grid;place-items:center;height:100vh;
+      font-family:Inter,Arial,sans-serif;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#fff;
+    }
+    .card{
+      width:100%;max-width:400px;background:rgba(255,255,255,0.03);
+      border-radius:16px;padding:28px;box-shadow:0 10px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+    }
+    h1{margin:0 0 20px;font-size:24px;text-align:center}
+    label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+    .field{margin-bottom:16px;position:relative}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.05);color:#fff;font-size:15px;outline:none}
+    input:focus{border-color:var(--accent1);box-shadow:0 0 0 2px rgba(124,58,237,0.4)}
+    .btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:600;
+      background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;cursor:pointer}
+    .btn:active {
+        opacity: 0.8;
+        transform: translateY(1px);
+    }
+    .message{margin-top:12px;padding:12px;border-radius:10px;font-weight:600;font-size:14px}
+    .message.error{background:rgba(239,68,68,0.12);color:var(--error)}
+    .message.success{background:rgba(16,185,129,0.12);color:var(--success)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>เข้าสู่ระบบ</h1>
+    <form id="loginForm" onsubmit="return handleSubmit(event)">
+      <label for="username">ชื่อผู้ใช้</label>
+      <div class="field">
+        <!-- Input ID ถูกตั้งเป็น 'username' แล้ว -->
+        <input id="username" type="text" placeholder="ใส่ชื่อผู้ใช้ของคุณ" required>
+      </div>
+      <label for="password">รหัสผ่าน</label>
+      <div class="field">
+        <input id="password" type="password" placeholder="••••••••" required>
+      </div>
+      <button class="btn" type="submit">เข้าสู่ระบบ IPTV ช่องทางธรรมชาติ</button>
+      <div id="msg"></div>
+    </form>
+  </div>
+  <script>
+    // ************************************************
+    // ** 1. แก้ไขค่าคงที่สำหรับชื่อผู้ใช้และรหัสผ่าน **
+    // ************************************************
+    const VALID_USERNAME = 'Sunny';
+    const VALID_PASS = '3571138'; // แก้ไขรหัสผ่านตามที่คุณต้องการ
+    const REDIRECT_URL = 'https://bestcommt2.github.io/tvonline.html';
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('msg');
+      msg.innerHTML = '';
+      const div = document.createElement('div');
+      div.className = 'message ' + type;
+      div.textContent = text;
+      msg.appendChild(div);
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      
+      // *******************************************************************
+      // ** 2. เปลี่ยนการดึงค่าจาก 'email' เป็น 'username' และใช้ตัวแปรใหม่ **
+      // *******************************************************************
+      const username = document.getElementById('username').value.trim(); // ดึงค่าจาก ID 'username'
+      const pass = document.getElementById('password').value;
+
+      // ตรวจสอบชื่อผู้ใช้ (เปลี่ยนจาก emailOk เป็น usernameOk)
+      const usernameOk = username === VALID_USERNAME;
+      const passOk = pass === VALID_PASS;
+
+      // ***************************************************************
+      // ** 3. แก้ไขตรรกะการเปรียบเทียบและการแสดงข้อความแจ้งเตือน **
+      // ***************************************************************
+      if (usernameOk && passOk) {
+        showMessage('เข้าสู่ระบบสำเร็จ กำลังนำทาง…', 'success');
+        // หน่วงเวลาเล็กน้อยเพื่อแสดงข้อความสำเร็จก่อนเปลี่ยนหน้า
+        setTimeout(() => {
+            window.location.href = REDIRECT_URL;
+        }, 800);
+        return true;
+      }
+
+      if (!usernameOk && passOk) {
+        showMessage('ชื่อผู้ใช้ไม่ถูกต้อง', 'error');
+        return false;
+      }
+
+      if (usernameOk && !passOk) {
+        showMessage('รหัสผ่านของคุณไม่ถูกต้อง', 'error');
+        return false;
+      }
+
+      if (!usernameOk && !passOk) {
+        showMessage('ลองใหม่อีกครั้ง ชื่อผู้ใช้และรหัสผ่านไม่ถูกต้อง', 'error');
+        return false;
+      }
+    }
+  </script>
+</body>
+</html>
