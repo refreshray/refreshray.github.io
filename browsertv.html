@@ -33,19 +33,24 @@
             justify-content: center;
         }
         .channel {
-            cursor: pointer;
-            padding: 5px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 5px;
-            text-align: center;
-            width: 90px;
+    		cursor: pointer;
+   	 		padding: 10px;
+    		background: #222;
+    		border: 1px solid #444;
+    		border-radius: 8px;
+    		text-align: center;
+   			width: 120px;           /* กว้างขึ้น */
+   		 	height: 90px;           /* กำหนดความสูงให้เท่ากันทุกช่อง */
+   		 	display: flex;
+   		 	flex-direction: column;
+  		  	justify-content: center; /* จัดให้อยู่กึ่งกลางแนวตั้ง */
+   			align-items: center;     /* จัดให้อยู่กึ่งกลางแนวนอน */
         }
-        .channel img {
-            width: 	50px;
-            height: auto;
-            margin-bottom: 5px;
-        }
+		.channel img {
+ 			width: 80%;              /* ขยายภาพโลโก้ให้ใหญ่ขึ้น */
+  			height: auto;
+  			object-fit: contain;     /* ป้องกันภาพบิด */
+}
         .channel:hover {
             background: #000;
         }
