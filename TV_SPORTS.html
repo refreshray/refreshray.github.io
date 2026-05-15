@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV "IPTV SPORTS "</title>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
+    <script>
+        jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+			align-items: center;
+        }
+        #player {
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 16/9;
+        }
+        #channel-list {
+            margin: 20px auto;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .channel {
+    		cursor: pointer;
+   	 		padding: 8px;
+    		background: #222;
+    		border: 1px solid #444;
+    		border-radius: 8px;
+    		text-align: center;
+   			width: 130px;           /* กว้างขึ้น */
+   		 	height: 80px;           /* กำหนดความสูงให้เท่ากันทุกช่อง */
+    		display: flex;
+    		justify-content: center;
+   			align-items: center;
+    		transition: transform 0.2s;
+    		overflow: hidden; /* ✅ บังคับไม่ให้ภาพเกินกรอบ */
+        }
+		.channel img {
+ 		    max-width: 100%;
+ 			max-height: 100%;
+   			object-fit: contain; /* ✅ รักษาสัดส่วนและไม่บิดเบี้ยว */
+    		display: block;
+}
+        .channel:hover {
+            background: #000;
+			transform: scale(1.05); 
+        }
+        #startPlayback {
+            margin: 15px;
+            padding: 10px 20px;
+            background: orange;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="color:orange; text-align:center;">IPTV SPORTS </h2>
+    <div id="player"></div>
+
+    <button id="startPlayback">▶ เริ่มเล่น</button>
+
+    <div id="channel-list"></div>
+
+    <script>
+        const channels = [
+            {
+                name: "",
+                logo: "https://r2.thesportsdb.com/images/media/channel/logo/b8avz51719570023.png",
+                file: "http://tv.cloudcdn.me:80/live.ts?channelId=286&uid=15301&deviceMac=00:1A:79:1D:53:3F",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/e/ea/Sky_Sports_Main_Event_UHD.svg/revision/latest?cb=20230210154620",
+                file: "http://185.160.192.64:80/mangin15/85784/215920",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/b/b8/Sky_Sport_Premier_League_NZ.svg/revision/latest?cb=20220726192218",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/579819",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/0/07/Astro_Grandstand_%28Oct_2024%29.png/revision/latest?cb=20241121183356",
+                file: "http://tv.cloudcdn.me:80/live.ts?channelId=125431&uid=15301&deviceMac=00:1A:79:1D:53:3F",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/0/0b/Astro_Premier_League_%28Oct_2024%29.png/revision/latest?cb=20241121183051",
+                file: "http://tv.cloudcdn.me:80/live.ts?channelId=125429&uid=15301&deviceMac=00:1A:79:1D:53:3F",
+		drm: false
+            },
+		
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/6/63/Astro_Premier_League_2_%28Oct_2024%29.png/revision/latest?cb=20241121183257",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1163683",
+		drm: false
+            },
+		
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/1/18/DAZN_1_2024.svg/revision/latest?cb=20240713213358",
+                file: "http://bgdc.live:25461/kimmyinny@gmail.com/5852813668/199228",
+		drm: false
+            },		
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/9/9f/Fubo_Sports_Network_%282023%29.png/revision/latest?cb=20251002012344",
+                file: "http://bgdc.live:25461/kimmyinny@gmail.com/5852813668/204503",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/3/36/Diema_Sport_2_HD.svg/revision/latest?cb=20250505001624",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/3337",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/c/c2/Star-sports-select-1-hd.png/revision/latest?cb=20230128174313",
+                file: "http://tv.cloudcdn.me:80/live.ts?channelId=299&uid=15301&deviceMac=00:1A:79:1D:53:3F",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/a/af/Star-sports-select-2-hd.png/revision/latest?cb=20230128175317",
+                file: "http://tv.cloudcdn.me:80/live.ts?channelId=300&uid=15301&deviceMac=00:1A:79:1D:53:3F",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/0/0d/Arena_Sport_Premium_1_2021.png/revision/latest/scale-to-width-down/400?cb=20250318191815",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/2991",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/b/bd/Arena_Sport_Premium_2_2021.png/revision/latest/scale-to-width-down/400?cb=20250318191920",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/2992",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/9/9f/Arena_Sport_Premium_3_2021.png/revision/latest/scale-to-width-down/400?cb=20250318192038",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/2993",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/6/6f/Arena_Sport_4_Premium_%282025%29.png/revision/latest/scale-to-width-down/250?cb=20260203135600",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/2994",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/3/3c/Arena_Sport_5_Premium_%282025%29.png/revision/latest/scale-to-width-down/250?cb=20260203135757",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/2995",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/6/62/Arena_Sport_6_2019.png/revision/latest/scale-to-width-down/300?cb=20260130185707",
+                file: "http://vipapyenhmw.top:8080/brejna/6yGNnFuahuTG/2996",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/9/93/Now_Sports_1.png/revision/latest/scale-to-width-down/1200?cb=20231007144612&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382843&extension=ts&play_token=KANAeecxcz",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/e/e2/Now_Sports_2.png/revision/latest?cb=20231007144709&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382842&extension=ts&play_token=MCoDoR8s9G",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/5/58/Now_Sports_3.png/revision/latest?cb=20231007150317&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382841&extension=ts&play_token=5uiKCGTNCF",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/7/71/Now_Sports_4.png/revision/latest/scale-to-width-down/1200?cb=20231007150358&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382840&extension=ts&play_token=eoeYdjrkUg",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/3/38/Now_Sports_5.png/revision/latest/scale-to-width-down/1200?cb=20231007150434&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382839&extension=ts&play_token=lu0NOftGgg",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/c/cc/Now_Sports_6.png/revision/latest?cb=20231007150847&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382838&extension=ts&play_token=WQ4pi5DTy3",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/2/22/Now_Sports_7.png/revision/latest?cb=20231007150933&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382837&extension=ts&play_token=rRmhe1TsX7",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logos/images/d/d1/Now_Sports_4K_1.png/revision/latest/scale-to-width-down/985?cb=20231007144452&path-prefix=vi",
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382836&extension=ts&play_token=jSAYXQsMoY",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://nowtv-strapi-bucket.s3.ap-southeast-1.amazonaws.com/630_wbg_e_646cc1e5f2.png",
+
+                file: "http://main.light-ott.net:80/play/live.php?mac=00:1A:79:3A:93:FD&stream=382834&extension=ts&play_token=JBOlpsgTKU",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/2/27/BeinSports1.svg/revision/latest?cb=20230910184457",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1776210",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/4/40/BeinSports2.svg/revision/latest?cb=20230910185720",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1776211",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://static.wikia.nocookie.net/logopedia/images/1/1a/BeinSports3.svg/revision/latest?cb=20230910185542",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1776212",
+		drm: false
+            },
+            {
+                name: "MONO MAX 1",
+                logo: "",
+                file: "http://tv-premium-pro.com/live/wezqqszfr2/i7481xvrdf/1776175.m3u8",
+		drm: false
+            },
+            {
+                name: "MONO MAX 1",
+                logo: "",
+                file: "http://tv-premium-pro.com/live/wezqqszfr2/i7481xvrdf/1776176.m3u8",
+		drm: false
+            },
+            {
+                name: "MONO MAX 1(1)",
+                logo: "",
+                file: "https://love.verowo7190.workers.dev/lx-origin/th-monomax01_480/chunks.m3u8",
+		drm: false
+            },
+            {
+                name: "MONO MAX 2(1)",
+                logo: "",
+                file: "https://love.verowo7190.workers.dev/lx-origin/th-monomax02_480/chunks.m3u8",
+		drm: false
+            },
+            {
+                name: "MONO MAX 1(2)",
+                logo: "",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1776175",
+		drm: false
+            },
+            {
+                name: "MONO MAX 1(2)",
+                logo: "",
+                file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1776176",
+		drm: false
+            },																
+			 
+			
+			
+            // … คุณสามารถเพิ่มช่องอื่นๆ ได้ตามต้องการ
+        ];
+
+        function loadPlayer(channel) {
+            const config = {
+                file: channel.file,
+                width: "100%",
+                aspectratio: "16:9",
+                autostart: true,
+                mute: false
+            };
+
+            // ถ้าเป็นไฟล์ .mpd + drm
+            if (channel.drm) {
+                config.type = "dash";
+                config.drm = {
+                    clearkey: {
+                        keyId: channel.keyId,
+                        key: channel.key
+                    }
+                };
+            } else {
+                // ถ้าไฟล์ .m3u8 (HLS)
+                config.type = "hls";
+            }
+
+            jwplayer("player").setup(config);
+        }
+
+        const channelList = document.getElementById("channel-list");
+        channels.forEach((channel, idx) => {
+            const div = document.createElement("div");
+            div.className = "channel";
+            const logoHtml = channel.logo 
+                ? `<img src="${channel.logo}" alt="${channel.name}"><br>`
+                : "";
+            div.innerHTML = logoHtml + channel.name;
+            div.onclick = () => loadPlayer(channel);
+            channelList.appendChild(div);
+        });
+
+        document.getElementById("startPlayback").onclick = () => {
+            loadPlayer(channels[0]); // เล่นช่องแรกเป็น default
+            document.getElementById("startPlayback").style.display = "none";
+        };
+    </script>
+</body>
+</html>
