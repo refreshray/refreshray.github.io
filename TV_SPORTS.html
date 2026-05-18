@@ -39,23 +39,33 @@
     		border: 1px solid #444;
     		border-radius: 8px;
     		text-align: center;
-   			width: 130px;           
-   		 	height: 80px;           
+   			width: 130px;           /* กว้างขึ้น */
+   		 	height: 80px;           /* กำหนดความสูงให้เท่ากันทุกช่อง */
     		display: flex;
     		justify-content: center;
    			align-items: center;
     		transition: transform 0.2s;
-    		overflow: hidden; 
+    		overflow: hidden; /* ✅ บังคับไม่ให้ภาพเกินกรอบ */
         }
 		.channel img {
  		    max-width: 100%;
  			max-height: 100%;
-   			object-fit: contain; 
+   			object-fit: contain; /* ✅ รักษาสัดส่วนและไม่บิดเบี้ยว */
     		display: block;
-        }
+}
         .channel:hover {
             background: #000;
 			transform: scale(1.05); 
+        }
+        #startPlayback {
+            margin: 15px;
+            padding: 10px 20px;
+            background: orange;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -63,105 +73,124 @@
     <h2 style="color:orange; text-align:center;">IPTV SPORTS </h2>
     <div id="player"></div>
 
+    <button id="startPlayback">▶ เริ่มเล่น</button>
+
     <div id="channel-list"></div>
 
     <script>
         const channels = [
-		{
-            name: "ASTRO PREMIER LEAGUE",
-            logo: "https://www.lyngsat.com/logo/tv/aa/astro-premier-league-my.png",
-            sources: [
-                { file: "http://tv-premium-pro.com/wezqqszfr2/i7481xvrdf/1163684", type: "hls" }, // ลิงก์หลัก (1)
-                { file: "http://xsmt.ccwu.cc/xsmt/smt.php?id=1788", type: "hls" }, // ลิงก์สำรอง (2)
-                { file: "http://xsmt.ccwu.cc/xsmt/smt.php?id=2821", type: "hls" }, // ลิงก์สำรอง (3) แก้ไข: เติมเครื่องหมายจุลภาคคั่นตรงนี้เรียบร้อย
-                { file: "http://xsmt.ccwu.cc/xsmt/smt.php?id=1789", type: "hls" }   // ลิงก์สำรอง (4)
-            ],
-            drm: false
-        },
-		{
-            name: "ASTRO GRANDSTAND",
-            logo: "https://www.lyngsat.com/logo/tv/aa/astro-grandstand-my.png",
-            sources: [
-                { file: "http://xsmt.ccwu.cc/xsmt/smt.php?id=1790", type: "hls" }, // ลิงก์หลัก (1)
-                { file: "http://xsmt.ccwu.cc/xsmt/smt.php?id=2822", type: "hls" }, // ลิงก์สำรอง (2)
-                { file: "https://rakyattv.my.id/donate/stream.php/.m3u8?id=astro-grandstand", type: "hls" }   // ลิงก์สำรอง (3)
-            ],
-            drm: false
-        },
-        {
-            name: "ช่องตัวอย่าง 2 (แบบ DRM มีสำรอง)",
-            logo: "https://via.placeholder.com/130x80",
-            sources: [
-                { file: "https://main.drm-server.com/live/ch2.mpd", type: "dash" },  // ลิงก์หลัก DRM
-                { file: "https://backup.drm-server.com/live/ch2.mpd", type: "dash" } // ลิงก์สำรอง DRM
-            ],
-            drm: true,
-            keyId: "ใส่ Key ID ที่นี่",
-            key: "ใส่ Key ที่นี่"
-        }
-    ];
+            {
+                name: "",
+                logo: "https://www.lyngsat.com/logo/tv/aa/astro-grandstand-my.png",
+                file: "https://rakyattv.my.id/donate/stream.php/.m3u8?id=astro-grandstand",
+                keyId: "",
+                key: "",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://www.lyngsat.com/logo/tv/aa/astro-sports-plus-my.png",
+                file: "https://rakyattv.my.id/donate/stream.php/.m3u8?id=astro-sports-plus",
+                keyId: "",
+                key: "",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://www.lyngsat.com/logo/tv/aa/astro-badminton-my.png",
+                file: "https://rakyattv.my.id/donate/stream.php/.m3u8?id=astro-badminton",
+                keyId: "",
+                key: "",
+		drm: false
+            },
+            {
+                name: "",
+                logo: "https://www.lyngsat.com/logo/tv/aa/astro-arena-my.png",
+                file: "https://rakyattv.my.id/donate/stream.php/.m3u8?id=arena",
+                keyId: "",
+                key: "",
+		drm: false
+            },
+			            {
+                name: "",
+                logo: "https://www.lyngsat.com/logo/tv/aa/astro-arena-2-my.png",
+                file: "https://rakyattv.my.id/donate/stream.php/.m3u8?id=arena-2",
+                keyId: "",
+                key: "",
+		drm: false
+            },
+			            {
+                name: "",
+                logo: "https://i.postimg.cc/G2wSHkHK/ezgif-737614d035dfd997.png",
+                file: "https://otte.live.fly.ww.aiv-cdn.net/iad-nitro/live/clients/dash/enc/xrs2ntety1/out/v1/31355dd2ffc64c9dae72ac6fc37dde5a/cenc.mpd",
+                keyId: "3fafc24484004893326a8354fe889767",
+                key: "01a4a713abdc5803f4816831ee27906f",
+		drm: true
+            },
+			            {
+                name: "",
+                logo: "https://ais-s.ais-vidnt.com/ais/play/origin/LIVE///channelicon//3BBAsian_new.png",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/101/101.mpd",
+                keyId: "dac6cbd9d17a451bb76386f52469e0e9",
+                key: "2e2ac52cadf843459915eaa1a9b95e48",
+		drm: true
+            },
+			            {
+                name: "",
+                logo: "https://i.postimg.cc/HnLRbbCc/bein-sports-1-qa-fr.png",
+                file: "https://d6m3sfa7e58z5.cloudfront.net/out/v1/3b0660e05eed4d769521eb0275aab3ab/index.mpd|referer=https://www.visionplus.id/",
+                keyId: "3ae6a430c1b8420ea280e317143d8d3a",
+                key: "142473ee925db0db0083c74a178c8298",
+		drm: false
+            },
 
-    let currentChannelIndex = 0; 
+					
+			
+            // … คุณสามารถเพิ่มช่องอื่นๆ ได้ตามต้องการ
+        ];
 
-    function loadPlayer(index) {
-        if (index < 0 || index >= channels.length) return;
-        
-        currentChannelIndex = index;
-        const channel = channels[index];
-        
-        const config = {
-            playlist: [{
-                title: channel.name,
-                image: channel.logo,
-                sources: channel.sources 
-            }],
-            width: "100%",
-            aspectratio: "16:9",
-            autostart: true,
-            mute: false
-        };
-
-        if (channel.drm) {
-            config.playlist[0].drm = {
-                clearkey: {
-                    keyId: channel.keyId,
-                    key: channel.key
-                }
+        function loadPlayer(channel) {
+            const config = {
+                file: channel.file,
+                width: "100%",
+                aspectratio: "16:9",
+                autostart: true,
+                mute: false
             };
-        }
 
-        const player = jwplayer("player").setup(config);
-
-        player.on('error', function(e) {
-            console.error("เกิดข้อผิดพลาดในการเล่นช่องนี้ (ลิงก์อาจจะเสียทั้งหมด):", e.message);
-            
-            let nextIndex = currentChannelIndex + 1;
-            if (nextIndex < channels.length) {
-                console.log("กำลังเปลี่ยนไปช่องถัดไปโดยอัตโนมัติ...");
-                loadPlayer(nextIndex); 
+            // ถ้าเป็นไฟล์ .mpd + drm
+            if (channel.drm) {
+                config.type = "dash";
+                config.drm = {
+                    clearkey: {
+                        keyId: channel.keyId,
+                        key: channel.key
+                    }
+                };
             } else {
-                console.log("หมดรายการช่องแล้ว ไม่สามารถไปต่อได้");
+                // ถ้าไฟล์ .m3u8 (HLS)
+                config.type = "hls";
             }
-        });
-    }
 
-    const channelList = document.getElementById("channel-list");
-    channels.forEach((channel, idx) => {
-        const div = document.createElement("div");
-        div.className = "channel";
-        const logoHtml = channel.logo 
-            ? `<img src="${channel.logo}" alt="${channel.name}"><br>`
-            : "";
-        div.innerHTML = logoHtml + channel.name;
-        div.onclick = () => loadPlayer(idx); 
-        channelList.appendChild(div);
-    });
-
-    window.onload = () => {
-        if (channels.length > 0) {
-            loadPlayer(0);
+            jwplayer("player").setup(config);
         }
-    };
-</script>
+
+        const channelList = document.getElementById("channel-list");
+        channels.forEach((channel, idx) => {
+            const div = document.createElement("div");
+            div.className = "channel";
+            const logoHtml = channel.logo 
+                ? `<img src="${channel.logo}" alt="${channel.name}"><br>`
+                : "";
+            div.innerHTML = logoHtml + channel.name;
+            div.onclick = () => loadPlayer(channel);
+            channelList.appendChild(div);
+        });
+
+        document.getElementById("startPlayback").onclick = () => {
+            loadPlayer(channels[0]); // เล่นช่องแรกเป็น default
+            document.getElementById("startPlayback").style.display = "none";
+        };
+    </script>
 </body>
 </html>
