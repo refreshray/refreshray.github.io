@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My TV Browser (M3U Parser)</title>
+    <title>My TV Browser (Embedded Playlist)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.css" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,9 +43,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.js"></script>
 
     <script>
-        const M3U_URL = 'https://github.com/cattv976/iptv/raw/refs/heads/main/cattv.m3u'; 
+        // ==========================================
+        // 1. ใส่โครงสร้างไฟล์ M3U วางไว้ตรงนี้ได้เลย (ไม่ต้องสร้างไฟล์แยกแล้ว)
+        // ==========================================
+        const M3U_DATA = `#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/0150.png" group-title="ช่องบันเทิง", HBOFamily
+#EXTVLCOPT:http-user-agent=AISPlay/2.9.17.29 (Linux;Android 11) ExoPlayerLib/2.9.6
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=07b138f30ad3441ca5a2f476e550af25:826ee4deef4b45cfafd5f79a591b15c6
+https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/106/106.mpd
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE//channelicon/0147.png" group-title="ช่องบันเทิง", Cinemax
+#EXTVLCOPT:http-user-agent=AISPlay/2.9.17.29 (Linux;Android 11) ExoPlayerLib/2.9.6
+#KODIPROP:inputstream.adaptive.manifest_type=mpd
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=f48caba466394e93b50780f21798787a:9a074a10db4342e7937076b3e52f6029
+https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/107/107.mpd`;
+
         let player;
 
+        // เริ่มต้นระบบ Shaka Player
         async function initPlayer() {
             const video = document.getElementById('video');
             const videoContainer = document.querySelector('[data-shaka-player-container]');
@@ -54,68 +70,60 @@
             const ui = new shaka.ui.Overlay(player, videoContainer, video);
 
             player.addEventListener('error', (event) => console.error('Player error:', event.detail));
-            fetchAndParseM3U(M3U_URL);
+            
+            // เรียกฟังก์ชันแกะข้อความ M3U ทันทีโดยไม่ต้องโหลดจากไฟล์ข้างนอก
+            loadChannelsFromData(M3U_DATA);
         }
 
-        async function fetchAndParseM3U(url) {
+        // ระบบแสดงผลช่องทีวี
+        function loadChannelsFromData(rawText) {
             const container = document.getElementById('channel-container');
             const countText = document.getElementById('count-text');
 
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('ไม่สามารถโหลดไฟล์ M3U ได้');
+            const channels = parseM3U(rawText);
+            container.innerHTML = '';
+            countText.innerText = `พบทั้งหมด ${channels.length} ช่องรายการ`;
+
+            if (channels.length === 0) {
+                container.innerHTML = '<div class="status-msg">รูปแบบ M3U ในโค้ดไม่ถูกต้อง</div>';
+                return;
+            }
+
+            channels.forEach((ch, index) => {
+                const li = document.createElement('li');
+                li.className = 'channel-item';
+                li.tabIndex = index + 1;
                 
-                const text = await response.text();
-                const channels = parseM3U(text);
-
-                container.innerHTML = '';
-                countText.innerText = `พบทั้งหมด ${channels.length} ช่องรายการ`;
-
-                if (channels.length === 0) {
-                    container.innerHTML = '<div class="status-msg">ไม่พบช่องรายการในไฟล์ หรือฟอร์แมตไฟล์ไม่ถูกต้อง</div>';
-                    return;
+                if (ch.logo) {
+                    const img = document.createElement('img');
+                    img.className = 'channel-logo';
+                    img.src = ch.logo;
+                    img.style.display = 'block';
+                    img.onerror = () => img.style.display = 'none';
+                    li.appendChild(img);
                 }
 
-                channels.forEach((ch, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'channel-item';
-                    li.tabIndex = index + 1;
-                    
-                    if (ch.logo) {
-                        const img = document.createElement('img');
-                        img.className = 'channel-logo';
-                        img.src = ch.logo;
-                        img.style.display = 'block';
-                        img.onerror = () => img.style.display = 'none';
-                        li.appendChild(img);
-                    }
+                const span = document.createElement('span');
+                span.className = 'channel-name';
+                span.innerText = ch.name;
+                li.appendChild(span);
 
-                    const span = document.createElement('span');
-                    span.className = 'channel-name';
-                    span.innerText = ch.name;
-                    li.appendChild(span);
-
-                    li.addEventListener('click', () => playStream(ch.url));
-                    li.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') playStream(ch.url);
-                    });
-
-                    container.appendChild(li);
+                li.addEventListener('click', () => playStream(ch.url));
+                li.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') playStream(ch.url);
                 });
 
-                if (channels.length > 0) {
-                    playStream(channels[0].url);
-                }
+                container.appendChild(li);
+            });
 
-            } catch (error) {
-                console.error(error);
-                countText.innerText = 'เกิดข้อผิดพลาด';
-                container.innerHTML = `<div class="status-msg">โหลดรายการล้มเหลว: ${error.message}</div>`;
+            // สั่งเล่นช่องแรกอัตโนมัติ
+            if (channels.length > 0) {
+                playStream(channels[0].url);
             }
         }
 
+        // ตัวแกะสคริปต์ M3U
         function parseM3U(m3uRaw) {
-            // ปรับปรุงตรงนี้ให้ตัดบรรดทัดได้ทั้งแบบ Windows (\r\n) และ Linux (\n)
             const lines = m3uRaw.split(/\r?\n/);
             const channels = [];
             let currentChannel = null;
@@ -140,11 +148,12 @@
             return channels;
         }
 
+        // เล่นสตรีมมิ่งวิดีโอ
         async function playStream(url) {
             try {
                 await player.load(url);
             } catch (error) {
-                console.error('ไม่สามารถเล่นสตรีมนี้ได้:', error);
+                console.error('ไม่สามารถเล่นได้:', error);
             }
         }
 
