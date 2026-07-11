@@ -3,161 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My TV Browser (Embedded Playlist)</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.css" />
+    <title>IPTV "IPTV ช่องทางธรรมชาติ"</title>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
+    <script>
+        jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
+    </script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: sans-serif; }
-        .video-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        video { width: 100%; height: 100%; background-color: #000; }
-        .sidebar-trigger { position: absolute; top: 0; left: 0; width: 40px; height: 100%; z-index: 999; }
-        .sidebar { position: absolute; top: 0; left: -340px; width: 320px; height: 100%; background: rgba(15, 15, 15, 0.95); box-shadow: 5px 0 15px rgba(0,0,0,0.7); transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1); z-index: 1000; color: #fff; padding: 20px; display: flex; flex-direction: column; }
-        .sidebar-trigger:hover + .sidebar, .sidebar:hover { left: 0; }
-        .sidebar h2 { margin-bottom: 5px; font-size: 20px; color: #fff; }
-        .channel-count { font-size: 12px; color: #888; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .channel-list { list-style: none; overflow-y: auto; flex-grow: 1; padding-right: 5px; }
-        .channel-list::-webkit-scrollbar { width: 6px; }
-        .channel-list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-        .channel-item { display: flex; align-items: center; padding: 12px; background: #1a1a1a; margin-bottom: 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
-        .channel-item:hover, .channel-item:focus { background: #e50914; border-color: #fff; outline: none; transform: scale(1.02); }
-        .channel-logo { width: 40px; height: 40px; object-fit: contain; margin-right: 12px; background: #111; border-radius: 4px; display: none; }
-        .channel-name { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .status-msg { text-align: center; margin-top: 20px; color: #aaa; font-size: 14px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 📺 ส่วนของเครื่องเล่นวิดีโอ (บังคับเต็มจอ 100%) */
+        .player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #player {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* 🖱️ พื้นที่ดักจับเมาส์ขอบซ้ายจอ (Invisible Trigger Zone) */
+        .sidebar-trigger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 100%;
+            z-index: 999;
+        }
+
+        /* 🗂️ เมนูด้านซ้าย (Sidebar) */
+        #sidebar {
+            position: absolute;
+            top: 0;
+            left: -340px; /* ซ่อนไว้ด้านซ้าย */
+            width: 320px;
+            height: 100%;
+            background: rgba(15, 15, 15, 0.95);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+            transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1000;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* กลไกเมื่อเมาส์ Hover ที่พื้นที่ดักจับ หรือที่ตัว Sidebar ให้สไลด์เมนูออกมา */
+        .sidebar-trigger:hover + #sidebar,
+        #sidebar:hover {
+            left: 0;
+        }
+
+        #sidebar h2 {
+            color: orange;
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* 📜 รายการกล่องช่องทีวี (เปลี่ยนเป็นแนวตั้ง) */
+        #channel-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 5px;
+        }
+
+        /* ปรับแต่งความสวยงามของ Scrollbar บนเมนู */
+        #channel-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #channel-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        /* 🔳 ปุ่มช่องทีวีแต่ละช่อง */
+        .channel {
+            cursor: pointer;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            text-align: center;
+            width: 100%; /* เต็มความกว้างของเมนู */
+            min-height: 70px;
+            display: flex;
+            justify-content: flex-start; /* จัดโลโก้และข้อความเรียงไปทางขวา */
+            align-items: center;
+            transition: all 0.2s;
+            overflow: hidden;
+            gap: 12px;
+        }
+        .channel img {
+            width: 50px;
+            height: 40px;
+            object-fit: contain;
+            display: block;
+            background: #111;
+            border-radius: 4px;
+        }
+        .channel-name {
+            font-size: 15px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .channel:hover, .channel:focus {
+            background: orange;
+            color: black;
+            border-color: #fff;
+            transform: scale(1.02);
+            outline: none;
+        }
+
+        /* 🔘 ปุ่มเริ่มเล่นตรงกลางจอตอนเปิดเว็บครั้งแรก */
+        #startPlayback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            padding: 15px 35px;
+            background: orange;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
 
+    <!-- ปุ่มเปิดการเล่นเริ่มต้น (เลี่ยงนโยบายบล็อกเสียงของเบราว์เซอร์ทีวี) -->
+    <button id="startPlayback">▶ เริ่มเล่นทีวีออนไลน์</button>
+
+    <!-- พื้นที่ดักจับเมาส์ขอบซ้ายจอ -->
     <div class="sidebar-trigger"></div>
 
-    <nav class="sidebar">
-        <h2>ช่องรายการทีวี</h2>
-        <div class="channel-count" id="count-text">กำลังโหลดรายการช่อง...</div>
-        <ul class="channel-list" id="channel-container"></ul>
+    <!-- เมนูด้านซ้าย (ซ่อนอยู่) -->
+    <nav id="sidebar">
+        <h2>ช่องทางธรรมชาติ</h2>
+        <div id="channel-list"></div>
     </nav>
 
-    <div class="video-container" data-shaka-player-container>
-        <video autoplay id="video" data-shaka-player></video>
+    <!-- เครื่องเล่นวิดีโอเต็มจอ -->
+    <div class="player-container">
+        <div id="player"></div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.js"></script>
-
     <script>
-        // ==========================================
-        // 1. ใส่โครงสร้างไฟล์ M3U วางไว้ตรงนี้ได้เลย (ไม่ต้องสร้างไฟล์แยกแล้ว)
-        // ==========================================
-        const M3U_DATA = `#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/0150.png" group-title="ช่องบันเทิง", HBOFamily
-#EXTVLCOPT:http-user-agent=AISPlay/2.9.17.29 (Linux;Android 11) ExoPlayerLib/2.9.6
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=07b138f30ad3441ca5a2f476e550af25:826ee4deef4b45cfafd5f79a591b15c6
-https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/106/106.mpd
-#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE//channelicon/0147.png" group-title="ช่องบันเทิง", Cinemax
-#EXTVLCOPT:http-user-agent=AISPlay/2.9.17.29 (Linux;Android 11) ExoPlayerLib/2.9.6
-#KODIPROP:inputstream.adaptive.manifest_type=mpd
-#KODIPROP:inputstream.adaptive.license_type=clearkey
-#KODIPROP:inputstream.adaptive.license_key=f48caba466394e93b50780f21798787a:9a074a10db4342e7937076b3e52f6029
-https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/107/107.mpd`;
+        // รายการช่องเดิมของคุณ (สามารถคัดลอกช่องทั้งหมดของคุณมาวางทับตรงนี้ได้เลย)
+        const channels = [
+            {
+                name: "VIPA FHD",
+                logo: "",
+                file: "https://fastly.live.brightcove.com/1846248737588002042/ap-southeast-1/6075037809001/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJob3N0IjoibzRoaGc2LmVncmVzcy5zYjBmOGsiLCJhY2NvdW50X2lkIjoiNjA3NTAzNzgwOTAwMSIsImVobiI6ImZhc3RseS5saXZlLmJyaWdodGNvdmUuY29tIiwiaXNzIjoiYmxpdmUtcGxheWJhY2stc291cmNlLWFwaSIsInN1YiI6InBhdGhtYXB0b2tlbiIsImF1ZCI6WyI2MDc1MDM3ODA5MDAxIl0sImp0aSI6IjE4NDYyNDg3Mzc1ODgwMDIwNDIifQ.HbjGHxGv87ivAdsCtAdEDjj2SVCfRnCUMYWn2fCkVPY/playlist-hls.m3u8",
+				drm: false
+            },	
+			{
+             name: "Mono29Plus",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/109/109.mpd",
+                keyId: "072eeb02f6744f838fcc8f0ef36b312e",
+                key: "b797c12f2dd64728aae23fd3c8ef275c",
+				drm: true
+            },
+            {
+                name: "3BBAsian",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/101/101.mpd",
+                keyId: "dac6cbd9d17a451bb76386f52469e0e9",
+                key: "2e2ac52cadf843459915eaa1a9b95e48",
+				drm: true
+            },
+            {
+             name: "HBOFamily",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/106/106.mpd",
+                keyId: "07b138f30ad3441ca5a2f476e550af25",
+                key: "826ee4deef4b45cfafd5f79a591b15c6",
+				drm: true
+            },
+            {
+             name: "Cinemax",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/107/107.mpd",
+                keyId: "f48caba466394e93b50780f21798787a",
+                key: "9a074a10db4342e7937076b3e52f6029",
+				drm: true
+            },	
+			{
+                name: "CARTOON NETWORK ",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/301/301.mpd",
+                keyId: "f140b94c73ab4ef5b96da7f49afb1154",
+                key: "85e4ef232c6e460f888eb20f651d66e3",
+				drm: true
+            },
+			{
+                name: "Cartoonito",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/302/302.mpd",
+                keyId: "ad2371259d34404cb89d54a4dc88dcd3",
+                key: "1ba155e345c4456ba891cbee9b3e1c4c",
+				drm: true
+            },
+            {
+                name: "Nickelodeo",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/303/303.mpd",
+                keyId: "9130a6448a74430794d355b48b56a64c",
+                key: "c2f4d3288cdb43cf81e519ceb414dd6f",
+				drm: true
+            },
+            {
+                name: "Nickjr",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/304/304.mpd",
+                keyId: "641c3f0e676d49d18c2082e093380e69",
+                key: "e06f3a2e327643249c3831ab199c4015",
+				drm: true
+            },		
+			{
+                name: "Food_Network",
+                logo: "",
+                file: "https://cri-streamer3.cdn.3bbtv.com:8443/3bb/live/205/205.mpd",
+                keyId: "d4b9d55410d24905920e57664a047116",
+                key: "d821110f280f4545ae0227d5784af199",
+				drm: true
+            },	
+            // ... เพิ่มช่องอื่นๆ ต่อลงมาได้เลยครับ
+        ];
 
-        let player;
+        function loadPlayer(channel) {
+            const config = {
+                file: channel.file,
+                width: "100%",
+                height: "100%",
+                autostart: true,
+                mute: false
+            };
 
-        // เริ่มต้นระบบ Shaka Player
-        async function initPlayer() {
-            const video = document.getElementById('video');
-            const videoContainer = document.querySelector('[data-shaka-player-container]');
-            
-            player = new shaka.Player(video);
-            const ui = new shaka.ui.Overlay(player, videoContainer, video);
-
-            player.addEventListener('error', (event) => console.error('Player error:', event.detail));
-            
-            // เรียกฟังก์ชันแกะข้อความ M3U ทันทีโดยไม่ต้องโหลดจากไฟล์ข้างนอก
-            loadChannelsFromData(M3U_DATA);
-        }
-
-        // ระบบแสดงผลช่องทีวี
-        function loadChannelsFromData(rawText) {
-            const container = document.getElementById('channel-container');
-            const countText = document.getElementById('count-text');
-
-            const channels = parseM3U(rawText);
-            container.innerHTML = '';
-            countText.innerText = `พบทั้งหมด ${channels.length} ช่องรายการ`;
-
-            if (channels.length === 0) {
-                container.innerHTML = '<div class="status-msg">รูปแบบ M3U ในโค้ดไม่ถูกต้อง</div>';
-                return;
+            // ถ้าเป็นไฟล์ .mpd + drm
+            if (channel.drm) {
+                config.type = "dash";
+                config.drm = {
+                    clearkey = {
+                        keyId: channel.keyId,
+                        key: channel.key
+                    }
+                };
+            } else {
+                // ถ้าไฟล์ .m3u8 (HLS)
+                config.type = "hls";
             }
 
-            channels.forEach((ch, index) => {
-                const li = document.createElement('li');
-                li.className = 'channel-item';
-                li.tabIndex = index + 1;
-                
-                if (ch.logo) {
-                    const img = document.createElement('img');
-                    img.className = 'channel-logo';
-                    img.src = ch.logo;
-                    img.style.display = 'block';
-                    img.onerror = () => img.style.display = 'none';
-                    li.appendChild(img);
-                }
+            jwplayer("player").setup(config);
+        }
 
-                const span = document.createElement('span');
-                span.className = 'channel-name';
-                span.innerText = ch.name;
-                li.appendChild(span);
-
-                li.addEventListener('click', () => playStream(ch.url));
-                li.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') playStream(ch.url);
-                });
-
-                container.appendChild(li);
+        // สร้างปุ่มเลือกช่องภายใน Sidebar ลิสต์แนวตั้ง
+        const channelList = document.getElementById("channel-list");
+        channels.forEach((channel, idx) => {
+            const div = document.createElement("div");
+            div.className = "channel";
+            div.tabIndex = idx + 1; // รองรับการกดปุ่มเลื่อนที่รีโมททีวี
+            
+            // ตรวจสอบโลโก้ ถ้าไม่มีให้สร้างกล่องเปล่าไว้กันพื้นที่เบี้ยว
+            const logoHtml = channel.logo 
+                ? `<img src="${channel.logo}" alt="${channel.name}">`
+                : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
+            
+            div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
+            
+            // คลิกหรือกดเลือกช่อง
+            div.onclick = () => loadPlayer(channel);
+            div.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') loadPlayer(channel);
             });
+            
+            channelList.appendChild(div);
+        });
 
-            // สั่งเล่นช่องแรกอัตโนมัติ
-            if (channels.length > 0) {
-                playStream(channels[0].url);
+        // เมื่อกดปุ่มเริ่มต้นเล่นตรงกลางจอ
+        document.getElementById("startPlayback").onclick = () => {
+            if(channels.length > 0) {
+                loadPlayer(channels[0]); // เล่นช่องแรกเป็น default
             }
-        }
-
-        // ตัวแกะสคริปต์ M3U
-        function parseM3U(m3uRaw) {
-            const lines = m3uRaw.split(/\r?\n/);
-            const channels = [];
-            let currentChannel = null;
-
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-
-                if (line.startsWith('#EXTINF:')) {
-                    const nameIndex = line.lastIndexOf(',');
-                    const name = nameIndex !== -1 ? line.substring(nameIndex + 1).trim() : 'Unknown Channel';
-
-                    const logoMatch = line.match(/tvg-logo="([^"]+)"/);
-                    const logo = logoMatch ? logoMatch[1] : null;
-
-                    currentChannel = { name, logo };
-                } else if (line && !line.startsWith('#') && currentChannel) {
-                    currentChannel.url = line;
-                    channels.push(currentChannel);
-                    currentChannel = null;
-                }
-            }
-            return channels;
-        }
-
-        // เล่นสตรีมมิ่งวิดีโอ
-        async function playStream(url) {
-            try {
-                await player.load(url);
-            } catch (error) {
-                console.error('ไม่สามารถเล่นได้:', error);
-            }
-        }
-
-        document.addEventListener('shaka-ui-loaded', initPlayer);
+            document.getElementById("startPlayback").style.display = "none";
+        };
     </script>
 </body>
 </html>
