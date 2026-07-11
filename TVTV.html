@@ -4,178 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My TV Browser (M3U Parser)</title>
-    
-    <!-- UI Framework สำหรับเครื่องเล่นวิดีโอระดับพรีเมียม -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.css" />
-    
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden;
-            font-family: sans-serif;
-        }
-
-        /* Container ของวิดีโอ (เต็มจอ) */
-        .video-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-        }
-
-        /* พื้นที่ดักจับเมาส์ด้านซ้าย (Invisible Trigger Zone) */
-        .sidebar-trigger {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 40px;
-            height: 100%;
-            z-index: 999;
-        }
-
-        /* เมนูด้านซ้าย (Sidebar) */
-        .sidebar {
-            position: absolute;
-            top: 0;
-            left: -340px; /* ซ่อนไว้ */
-            width: 320px;
-            height: 100%;
-            background: rgba(15, 15, 15, 0.95);
-            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
-            transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            z-index: 1000;
-            color: #fff;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* เปิดเมนูเมื่อเมาส์ Hover */
-        .sidebar-trigger:hover + .sidebar,
-        .sidebar:hover {
-            left: 0;
-        }
-
-        .sidebar h2 {
-            margin-bottom: 5px;
-            font-size: 20px;
-            color: #fff;
-        }
-
-        .channel-count {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        /* รายการช่องทีวี (Scrollable) */
-        .channel-list {
-            list-style: none;
-            overflow-y: auto;
-            flex-grow: 1;
-            padding-right: 5px;
-        }
-
-        /* ปรับแต่ง Scrollbar ของเมนู */
-        .channel-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .channel-list::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 3px;
-        }
-
-        /* สไตล์ปุ่มช่องทีวี */
-        .channel-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: #1a1a1a;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-        .channel-item:hover, .channel-item:focus {
-            background: #e50914; /* ไฮไลท์สีแดง */
-            border-color: #fff;
-            outline: none;
-            transform: scale(1.02);
-        }
-
-        .channel-logo {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-            margin-right: 12px;
-            background: #111;
-            border-radius: 4px;
-            display: none; /* จะเปิดแสดงผลถ้าในไฟล์ M3U มีโลโก้ */
-        }
-        .channel-name {
-            font-size: 15px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        /* Loading Status */
-        .status-msg {
-            text-align: center;
-            margin-top: 20px;
-            color: #aaa;
-            font-size: 14px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; background-color: #000; overflow: hidden; font-family: sans-serif; }
+        .video-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        video { width: 100%; height: 100%; background-color: #000; }
+        .sidebar-trigger { position: absolute; top: 0; left: 0; width: 40px; height: 100%; z-index: 999; }
+        .sidebar { position: absolute; top: 0; left: -340px; width: 320px; height: 100%; background: rgba(15, 15, 15, 0.95); box-shadow: 5px 0 15px rgba(0,0,0,0.7); transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1); z-index: 1000; color: #fff; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar-trigger:hover + .sidebar, .sidebar:hover { left: 0; }
+        .sidebar h2 { margin-bottom: 5px; font-size: 20px; color: #fff; }
+        .channel-count { font-size: 12px; color: #888; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .channel-list { list-style: none; overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+        .channel-list::-webkit-scrollbar { width: 6px; }
+        .channel-list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        .channel-item { display: flex; align-items: center; padding: 12px; background: #1a1a1a; margin-bottom: 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .channel-item:hover, .channel-item:focus { background: #e50914; border-color: #fff; outline: none; transform: scale(1.02); }
+        .channel-logo { width: 40px; height: 40px; object-fit: contain; margin-right: 12px; background: #111; border-radius: 4px; display: none; }
+        .channel-name { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-msg { text-align: center; margin-top: 20px; color: #aaa; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- พื้นที่ดักจับเมาส์เพื่อเปิดเมนู -->
     <div class="sidebar-trigger"></div>
 
-    <!-- เมนูด้านซ้าย -->
     <nav class="sidebar">
         <h2>ช่องรายการทีวี</h2>
         <div class="channel-count" id="count-text">กำลังโหลดรายการช่อง...</div>
-        <ul class="channel-list" id="channel-container">
-            <!-- รายการช่องจากไฟล์ .m3u จะถูกเพิ่มเข้ามาตรงนี้ผ่าน JavaScript -->
-        </ul>
+        <ul class="channel-list" id="channel-container"></ul>
     </nav>
 
-    <!-- หน้าจอเล่นวิดีโอ (Shaka Player) -->
     <div class="video-container" data-shaka-player-container>
         <video autoplay id="video" data-shaka-player></video>
     </div>
 
-    <!-- โหลดไลบรารีสำหรับสตรีมมิ่ง -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.js"></script>
 
     <script>
-        // 1. ใส่ URL ของไฟล์ .m3u ของคุณตรงนี้ (รองรับทั้งลิงก์บน GitHub หรือลิงก์ภายนอก)
-        // ข้อควรระวัง: ลิงก์ต้องรองรับ CORS (ถ้าดึงจาก GitHub Repository เดียวกันจะไม่มีปัญหา)
         const M3U_URL = 'https://github.com/cattv976/iptv/raw/refs/heads/main/cattv.m3u'; 
-
         let player;
 
-        // เริ่มต้นระบบ Shaka Player
         async function initPlayer() {
             const video = document.getElementById('video');
             const videoContainer = document.querySelector('[data-shaka-player-container]');
@@ -183,14 +53,10 @@
             player = new shaka.Player(video);
             const ui = new shaka.ui.Overlay(player, videoContainer, video);
 
-            // ดักจับ Error
             player.addEventListener('error', (event) => console.error('Player error:', event.detail));
-            
-            // โหลดไฟล์ M3U หลังจากสร้าง Player เสร็จ
             fetchAndParseM3U(M3U_URL);
         }
 
-        // ฟังก์ชันโหลดและแกะไฟล์ M3U (Parser)
         async function fetchAndParseM3U(url) {
             const container = document.getElementById('channel-container');
             const countText = document.getElementById('count-text');
@@ -206,23 +72,21 @@
                 countText.innerText = `พบทั้งหมด ${channels.length} ช่องรายการ`;
 
                 if (channels.length === 0) {
-                    container.innerHTML = '<div class="status-msg">ไม่พบช่องรายการในไฟล์</div>';
+                    container.innerHTML = '<div class="status-msg">ไม่พบช่องรายการในไฟล์ หรือฟอร์แมตไฟล์ไม่ถูกต้อง</div>';
                     return;
                 }
 
-                // สร้างองค์ประกอบ HTML สำหรับแต่ละช่อง
                 channels.forEach((ch, index) => {
                     const li = document.createElement('li');
                     li.className = 'channel-item';
                     li.tabIndex = index + 1;
                     
-                    // จัดการเรื่องโลโก้ช่อง (ถ้ามี)
                     if (ch.logo) {
                         const img = document.createElement('img');
                         img.className = 'channel-logo';
                         img.src = ch.logo;
                         img.style.display = 'block';
-                        img.onerror = () => img.style.display = 'none'; // ซ่อนถ้าโหลดรูปไม่ขึ้น
+                        img.onerror = () => img.style.display = 'none';
                         li.appendChild(img);
                     }
 
@@ -231,10 +95,7 @@
                     span.innerText = ch.name;
                     li.appendChild(span);
 
-                    // คลิกเพื่อเปลี่ยนช่อง
                     li.addEventListener('click', () => playStream(ch.url));
-                    
-                    // สำหรับรีโมทกด Enter
                     li.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') playStream(ch.url);
                     });
@@ -242,7 +103,6 @@
                     container.appendChild(li);
                 });
 
-                // เล่นช่องแรกทันทีเมื่อโหลดเสร็จ
                 if (channels.length > 0) {
                     playStream(channels[0].url);
                 }
@@ -254,9 +114,9 @@
             }
         }
 
-        // หลักการแกะโครงสร้างไฟล์ M3U แบบมาตรฐาน
         function parseM3U(m3uRaw) {
-            const lines = m3uRaw.split('\n');
+            // ปรับปรุงตรงนี้ให้ตัดบรรดทัดได้ทั้งแบบ Windows (\r\n) และ Linux (\n)
+            const lines = m3uRaw.split(/\r?\n/);
             const channels = [];
             let currentChannel = null;
 
@@ -264,36 +124,30 @@
                 const line = lines[i].trim();
 
                 if (line.startsWith('#EXTINF:')) {
-                    // ดึงชื่อช่องทีวี (ข้อความหลังเครื่องหมายจุลภาคตัวสุดท้าย)
                     const nameIndex = line.lastIndexOf(',');
                     const name = nameIndex !== -1 ? line.substring(nameIndex + 1).trim() : 'Unknown Channel';
 
-                    // ดึงโลโก้ (tvg-logo="...") ถ้ามี
                     const logoMatch = line.match(/tvg-logo="([^"]+)"/);
                     const logo = logoMatch ? logoMatch[1] : null;
 
                     currentChannel = { name, logo };
                 } else if (line && !line.startsWith('#') && currentChannel) {
-                    // บรรทัดนี้คือ URL ของสตรีม (ต่อจากบรรทัด #EXTINF)
                     currentChannel.url = line;
                     channels.push(currentChannel);
-                    currentChannel = null; // รีเซ็ตเพื่อรอช่องถัดไป
+                    currentChannel = null;
                 }
             }
             return channels;
         }
 
-        // ฟังก์ชันสั่งเล่นสตรีมวิดีโอ
         async function playStream(url) {
             try {
                 await player.load(url);
-                console.log('กำลังเล่น:', url);
             } catch (error) {
                 console.error('ไม่สามารถเล่นสตรีมนี้ได้:', error);
             }
         }
 
-        // ลงทะเบียนเมื่อ Shaka พร้อมใช้งาน
         document.addEventListener('shaka-ui-loaded', initPlayer);
     </script>
 </body>
