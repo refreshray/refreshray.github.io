@@ -176,16 +176,16 @@
     </div>
 
     <script>
-        // รายการช่องของคุณ (สามารถนำลิสต์ทั้งหมดมาใส่ต่อตรงนี้ได้เลย)
+        // รายการช่องทีวี
         const channels = [
             {
-             name: "MONOMAX SPORTS TV FHD",
+                name: "MONOMAX SPORTS TV FHD",
                 logo: "",
                 file: "https://live-tv.monomax.me/v1/019d38969c6c150b585a1f99efcb45/019e96a14f12150b585a122d294a26/main.m3u8",
 				drm: false
             },
 			{
-             name: "Mono29Plus",
+                name: "Mono29Plus",
                 logo: "",
                 file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/109/109.mpd",
                 keyId: "072eeb02f6744f838fcc8f0ef36b312e",
@@ -193,14 +193,14 @@
 				drm: true
             },
 			{
-             name: "Mono29 musicstations",
+                name: "Mono29 musicstations",
                 logo: "",
                 file: "https://cors-proxy.pulsesoftware.com/https://ais-s.ais-vidnt.com/ais/play/origin/live/eds/V0193/DASH/V0193.mpd",
                 keyId: "2355ee65664e0b7fc02e7d389e1d2658",
                 key: "a935ccb1065ffe214823aae414f8b257",
 				drm: true
             },
-			 {
+			{
                 name: "VIPA FHD",
                 logo: "",
                 file: "https://fastly.live.brightcove.com/1846248737588002042/ap-southeast-1/6075037809001/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJob3N0IjoibzRoaGc2LmVncmVzcy5zYjBmOGsiLCJhY2NvdW50X2lkIjoiNjA3NTAzNzgwOTAwMSIsImVobiI6ImZhc3RseS5saXZlLmJyaWdodGNvdmUuY29tIiwiaXNzIjoiYmxpdmUtcGxheWJhY2stc291cmNlLWFwaSIsInN1YiI6InBhdGhtYXB0b2tlbiIsImF1ZCI6WyI2MDc1MDM3ODA5MDAxIl0sImp0aSI6IjE4NDYyNDg3Mzc1ODgwMDIwNDIifQ.HbjGHxGv87ivAdsCtAdEDjj2SVCfRnCUMYWn2fCkVPY/playlist-hls.m3u8",
@@ -215,7 +215,7 @@
 				drm: true
             },
             {
-             name: "HBOFamily",
+                name: "HBOFamily",
                 logo: "",
                 file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/106/106.mpd",
                 keyId: "07b138f30ad3441ca5a2f476e550af25",
@@ -223,7 +223,7 @@
 				drm: true
             },
             {
-             name: "Cinemax",
+                name: "Cinemax",
                 logo: "",
                 file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/107/107.mpd",
                 keyId: "f48caba466394e93b50780f21798787a",
@@ -275,14 +275,13 @@
   				logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1834.png",
   				file: "https://get.perfecttv.net/mutv.mpd",
   				drm: false
-			}
+			}, /* ✅ ใส่เครื่องหมายจุลภาคคั่นตรงนี้แล้ว */
 			{
  				name: "Trace Urban",
   				logo: "https://experience-cache.cdi.streaming.proximustv.be/posterserver/poster/DEFAULT/h-140/t_0210_002.png",
   				file: "https://lightning-traceurban-samsungau.amagi.tv/playlist.m3u8",
   				drm: false
 			}
-			
         ];
 
         function loadPlayer(channel) {
@@ -294,18 +293,21 @@
                 mute: false
             };
 
-            // ถ้าเป็นไฟล์ .mpd + drm
-            if (channel.drm) {
+            // ✅ ปรับเงื่อนไขการเลือกประเภทไฟล์อัตโนมัติ (.mpd / .m3u8)
+            if (channel.file.includes('.mpd')) {
                 config.type = "dash";
+            } else {
+                config.type = "hls";
+            }
+
+            // ถ้าเปิดใช้งาน DRM (ClearKey)
+            if (channel.drm) {
                 config.drm = {
-                    clearkey: {   /* ✅ แก้ไขจุดนี้เรียบร้อยแล้ว */
+                    clearkey: {
                         keyId: channel.keyId,
                         key: channel.key
                     }
                 };
-            } else {
-                // ถ้าไฟล์ .m3u8 (HLS)
-                config.type = "hls";
             }
 
             jwplayer("player").setup(config);
