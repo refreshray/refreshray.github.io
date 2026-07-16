@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ช่องทางธรรมชาติ</title>
-    <!-- โหลด Video.js CSS และ JavaScript -->
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    <!-- โหลดปลั๊กอินสำหรับรองรับ EME (DRM / ClearKey) ของ Video.js -->
-    <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@5.2.0/dist/videojs-contrib-eme.min.js"></script>
-    
+	<title>ช่องทางธรรมชาติ</title>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
+    <script>
+        jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
+    </script>
     <style>
         * {
             box-sizing: border-box;
@@ -34,7 +32,7 @@
             height: 100%;
             z-index: 1;
         }
-        .video-js {
+        #player {
             width: 100% !important;
             height: 100% !important;
         }
@@ -53,7 +51,7 @@
         #sidebar {
             position: absolute;
             top: 0;
-            left: -340px;
+            left: -340px; /* ซ่อนไว้ด้านซ้าย */
             width: 320px;
             height: 100%;
             background: rgba(15, 15, 15, 0.95);
@@ -65,6 +63,7 @@
             flex-direction: column;
         }
 
+        /* กลไกเมื่อเมาส์ Hover ที่พื้นที่ดักจับ หรือที่ตัว Sidebar ให้สไลด์เมนูออกมา */
         .sidebar-trigger:hover + #sidebar,
         #sidebar:hover {
             left: 0;
@@ -79,6 +78,7 @@
             border-bottom: 1px solid #333;
         }
 
+        /* 📜 รายการกล่องช่องทีวี (เปลี่ยนเป็นแนวตั้ง) */
         #channel-list {
             flex-grow: 1;
             overflow-y: auto;
@@ -88,6 +88,7 @@
             padding-right: 5px;
         }
 
+        /* ปรับแต่งความสวยงามของ Scrollbar บนเมนู */
         #channel-list::-webkit-scrollbar {
             width: 6px;
         }
@@ -96,6 +97,7 @@
             border-radius: 3px;
         }
 
+        /* 🔳 ปุ่มช่องทีวีแต่ละช่อง */
         .channel {
             cursor: pointer;
             padding: 10px;
@@ -103,10 +105,10 @@
             border: 1px solid #444;
             border-radius: 8px;
             text-align: center;
-            width: 100%;
+            width: 100%; /* เต็มความกว้างของเมนู */
             min-height: 70px;
             display: flex;
-            justify-content: flex-start;
+            justify-content: flex-start; /* จัดโลโก้และข้อความเรียงไปทางขวา */
             align-items: center;
             transition: all 0.2s;
             overflow: hidden;
@@ -135,6 +137,7 @@
             outline: none;
         }
 
+        /* 🔘 ปุ่มเริ่มเล่นตรงกลางจอตอนเปิดเว็บครั้งแรก */
         #startPlayback {
             position: absolute;
             top: 50%;
@@ -155,29 +158,34 @@
 </head>
 <body>
 
+    <!-- ปุ่มเปิดการเล่นเริ่มต้น (เลี่ยงนโยบายบล็อกเสียงของเบราว์เซอร์ทีวี) -->
     <button id="startPlayback">▶ เริ่มเล่นทีวีออนไลน์</button>
+
+    <!-- พื้นที่ดักจับเมาส์ขอบซ้ายจอ -->
     <div class="sidebar-trigger"></div>
 
+    <!-- เมนูด้านซ้าย (ซ่อนอยู่) -->
     <nav id="sidebar">
         <h2>ช่องทางธรรมชาติ</h2>
         <div id="channel-list"></div>
     </nav>
 
+    <!-- เครื่องเล่นวิดีโอเต็มจอ -->
     <div class="player-container">
-        <video id="tv-player" class="video-js vjs-default-skin" controls autoplay preload="auto"></video>
+        <div id="player"></div>
     </div>
 
     <script>
-        // รายการช่องทีวีเดิมของคุณ
+        // รายการช่องของคุณ (สามารถนำลิสต์ทั้งหมดมาใส่ต่อตรงนี้ได้เลย)
         const channels = [
             {
-                name: "MONOMAX SPORTS TV FHD",
+             name: "MONOMAX SPORTS TV FHD",
                 logo: "",
                 file: "https://live-tv.monomax.me/v1/019d38969c6c150b585a1f99efcb45/019e96a14f12150b585a122d294a26/main.m3u8",
 				drm: false
             },
 			{
-                name: "Mono29Plus",
+             name: "Mono29Plus",
                 logo: "",
                 file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/109/109.mpd",
                 keyId: "072eeb02f6744f838fcc8f0ef36b312e",
@@ -185,14 +193,14 @@
 				drm: true
             },
 			{
-                name: "Mono29 musicstations",
+             name: "Mono29 musicstations",
                 logo: "",
                 file: "https://cors-proxy.pulsesoftware.com/https://ais-s.ais-vidnt.com/ais/play/origin/live/eds/V0193/DASH/V0193.mpd",
                 keyId: "2355ee65664e0b7fc02e7d389e1d2658",
                 key: "a935ccb1065ffe214823aae414f8b257",
 				drm: true
             },
-			{
+			 {
                 name: "VIPA FHD",
                 logo: "",
                 file: "https://fastly.live.brightcove.com/1846248737588002042/ap-southeast-1/6075037809001/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJob3N0IjoibzRoaGc2LmVncmVzcy5zYjBmOGsiLCJhY2NvdW50X2lkIjoiNjA3NTAzNzgwOTAwMSIsImVobiI6ImZhc3RseS5saXZlLmJyaWdodGNvdmUuY29tIiwiaXNzIjoiYmxpdmUtcGxheWJhY2stc291cmNlLWFwaSIsInN1YiI6InBhdGhtYXB0b2tlbiIsImF1ZCI6WyI2MDc1MDM3ODA5MDAxIl0sImp0aSI6IjE4NDYyNDg3Mzc1ODgwMDIwNDIifQ.HbjGHxGv87ivAdsCtAdEDjj2SVCfRnCUMYWn2fCkVPY/playlist-hls.m3u8",
@@ -207,7 +215,7 @@
 				drm: true
             },
             {
-                name: "HBOFamily",
+             name: "HBOFamily",
                 logo: "",
                 file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/106/106.mpd",
                 keyId: "07b138f30ad3441ca5a2f476e550af25",
@@ -215,7 +223,7 @@
 				drm: true
             },
             {
-                name: "Cinemax",
+             name: "Cinemax",
                 logo: "",
                 file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/107/107.mpd",
                 keyId: "f48caba466394e93b50780f21798787a",
@@ -265,70 +273,42 @@
 			{
  				name: "MUTV",
   				logo: "https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1834.png",
-  				file: "https://get.perfecttv.net/mutv.mpd",
+  				file: "",
   				drm: false
 			},
 			{
  				name: "Trace Urban",
   				logo: "https://experience-cache.cdi.streaming.proximustv.be/posterserver/poster/DEFAULT/h-140/t_0210_002.png",
-  				file: "https://lightning-traceurban-samsungau.amagi.tv/playlist.m3u8",
+  				file: "",
   				drm: false
 			}
+			
         ];
 
-        // ประกาศสร้างตัวเล่น Video.js
-        const player = videojs('tv-player', {
-            fluid: false,
-            autoplay: true,
-            controls: true
-        });
-
-        // เปิดใช้งานระบบ EME สำหรับ ClearKey DRM
-        player.eme();
-
         function loadPlayer(channel) {
-            let type = "application/x-mpegURL"; // ค่าเริ่มต้นสำหรับ .m3u8 (HLS)
-            
-            if (channel.file.includes('.mpd')) {
-                type = "application/dash+xml"; // ค่าสำหรับ .mpd (DASH)
-            }
-
-            const srcOptions = {
-                src: channel.file,
-                type: type
+            const config = {
+                file: channel.file,
+                width: "100%",
+                height: "100%",
+                autostart: true,
+                mute: false
             };
 
-            // ตั้งค่า DRM ClearKey หากกำหนดไว้เป็น true
+            // ถ้าเป็นไฟล์ .mpd + drm
             if (channel.drm) {
-                srcOptions.keySystems = {
-                    'org.w3.clearkey': {
-                        'audio/mp4': {
-                            keyId: new Uint8Array(matchKeyToBytes(channel.keyId)),
-                            key: new Uint8Array(matchKeyToBytes(channel.key))
-                        },
-                        'video/mp4': {
-                            keyId: new Uint8Array(matchKeyToBytes(channel.keyId)),
-                            key: new Uint8Array(matchKeyToBytes(channel.key))
-                        }
+                config.type = "dash";
+                config.drm = {
+                    clearkey: {   /* ✅ แก้ไขจุดนี้เรียบร้อยแล้ว */
+                        keyId: channel.keyId,
+                        key: channel.key
                     }
                 };
+            } else {
+                // ถ้าไฟล์ .m3u8 (HLS)
+                config.type = "hls";
             }
 
-            player.src(srcOptions);
-            player.ready(function() {
-                player.play().catch(function(error) {
-                    console.log("Autoplay บล็อกเสียง ให้ผู้ใช้กดเปิดเอง:", error);
-                });
-            });
-        }
-
-        // ฟังก์ชันแปลงข้อความ Key Hex เป็น Bytes สำหรับระบบ ClearKey
-        function matchKeyToBytes(hexString) {
-            const result = [];
-            for (let i = 0; i < hexString.length; i += 2) {
-                result.push(parseInt(hexString.substr(i, 2), 16));
-            }
-            return result;
+            jwplayer("player").setup(config);
         }
 
         // สร้างปุ่มเลือกช่องภายใน Sidebar ลิสต์แนวตั้ง
@@ -336,14 +316,16 @@
         channels.forEach((channel, idx) => {
             const div = document.createElement("div");
             div.className = "channel";
-            div.tabIndex = idx + 1;
+            div.tabIndex = idx + 1; // รองรับการกดปุ่มเลื่อนที่รีโมททีวี
             
+            // ตรวจสอบโลโก้ ถ้าไม่มีให้สร้างกล่องเปล่าไว้กันพื้นที่เบี้ยว
             const logoHtml = channel.logo 
                 ? `<img src="${channel.logo}" alt="${channel.name}">`
                 : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
             
             div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
             
+            // คลิกหรือกดเลือกช่อง
             div.onclick = () => loadPlayer(channel);
             div.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') loadPlayer(channel);
@@ -352,10 +334,10 @@
             channelList.appendChild(div);
         });
 
-        // ปุ่มเริ่มต้นเล่นตรงกลางจอตอนเปิดเว็บ
+        // เมื่อกดปุ่มเริ่มต้นเล่นตรงกลางจอ
         document.getElementById("startPlayback").onclick = () => {
             if(channels.length > 0) {
-                loadPlayer(channels[0]);
+                loadPlayer(channels[0]); // เล่นช่องแรกเป็น default
             }
             document.getElementById("startPlayback").style.display = "none";
         };
