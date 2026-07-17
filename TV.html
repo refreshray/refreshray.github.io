@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องเล่น M3U8 & MPD Player</title>
+    <!-- โหลดสไตล์ของ Video.js -->
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <!-- โหลดธีมสวย ๆ (เลือกเปลี่ยนได้) -->
+    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        .video-container {
+            margin-bottom: 20px;
+            background: #000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .channel-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .channel-btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .channel-btn:hover {
+            background: #ff0055;
+            border-color: #ff0055;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Streaming Player (M3U8 / MPD)</h2>
+    
+    <!-- ตัวเล่นวิดีโอ -->
+    <div class="video-container">
+        <video id="my-video" class="video-js vjs-theme-city vjs-16-9 vjs-big-play-centered" controls autoplay preload="auto">
+            <p class="vjs-no-js">
+                เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอนี้
+            </p>
+        </video>
+    </div>
+
+    <h3>รายชื่อช่องรายการ</h3>
+    <!-- ปุ่มเลือกช่อง -->
+    <div class="channel-list">
+        <!-- ตัวอย่างช่อง M3U8 (HLS) -->
+        <button class="channel-btn" onclick="changeChannel('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', 'application/x-mpegURL')">
+            ช่องทดสอบ HLS
+        </button>
+        
+        <!-- ตัวอย่างช่อง MPD (DASH) -->
+        <button class="channel-btn" onclick="changeChannel('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd', 'application/dash+xml')">
+            ช่องทดสอบ DASH
+        </button>
+
+        <!-- เพิ่มช่องของคุณตรงนี้ -->
+        <!-- 
+        <button class="channel-btn" onclick="changeChannel('ลิงก์ช่องของคุณ', 'ประเภทของลิงก์')">
+            ชื่อช่อง
+        </button> 
+        -->
+    </div>
+</div>
+
+<!-- โหลดสคริปต์ Video.js -->
+<script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+<!-- โหลดสคริปต์สำหรับรองรับไฟล์ MPD/DASH -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-dash/5.1.1/videojs-contrib-dash.min.js"></script>
+
+<script>
+    // เริ่มต้นระบบเครื่องเล่นวิดีโอ
+    var player = videojs('my-video', {
+        fluid: true,
+        playbackRates: [0.5, 1, 1.5, 2]
+    });
+
+    // ฟังก์ชันสำหรับเปลี่ยนช่องเมื่อกดปุ่ม
+    function changeChannel(url, type) {
+        player.src({
+            src: url,
+            type: type // 'application/x-mpegURL' สำหรับ m3u8 หรือ 'application/dash+xml' สำหรับ mpd
+        });
+        player.play();
+    }
+
+    // เล่นช่องแรกโดยอัตโนมัติเมื่อเปิดหน้าเว็บ (ใส่ลิงก์เริ่มต้นที่นี่)
+    player.src({
+        src: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+        type: 'application/x-mpegURL'
+    });
+</script>
+
+</body>
+</html>
