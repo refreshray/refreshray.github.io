@@ -73,9 +73,53 @@
             color: orange;
             text-align: center;
             font-size: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
+        }
+
+        /* 🔘 แถบเลือกหมวดหมู่ (Category Filter Container) */
+        #category-filter {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        #category-filter::-webkit-scrollbar {
+            height: 4px;
+        }
+        #category-filter::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 2px;
+        }
+
+        /* ปุ่มเลือกหมวดหมู่แต่ละปุ่ม */
+        .cat-btn {
+            background: #2a2a2a;
+            color: #ccc;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .cat-btn:hover {
+            background: #444;
+            color: #fff;
+        }
+
+        /* ปุ่มหมวดหมู่ที่กำลังถูกเลือก */
+        .cat-btn.active {
+            background: orange;
+            color: #000;
+            font-weight: bold;
+            border-color: orange;
         }
 
         /* 📜 รายการกล่องช่องทีวี */
@@ -97,13 +141,13 @@
             border-radius: 3px;
         }
 
-        /* 🏷️ ตกแต่งหัวข้อหมวดหมู่ (Category Header) */
+        /* 🏷️ ตกแต่งหัวข้อหมวดหมู่ */
         .category-title {
             color: #ff9800;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             padding: 10px 5px 5px 5px;
-            margin-top: 10px;
+            margin-top: 5px;
             border-bottom: 1px dashed #444;
             text-transform: uppercase;
         }
@@ -160,6 +204,8 @@
     <!-- เมนูด้านซ้าย (ซ่อนอยู่) -->
     <nav id="sidebar">
         <h2>ช่องทางธรรมชาติ</h2>
+        <!-- 🔘 เพิ่มแถบตัวกรองหมวดหมู่ตรงนี้ -->
+        <div id="category-filter"></div>
         <div id="channel-list"></div>
     </nav>
 
@@ -170,13 +216,6 @@
 
     <script>
         const channels = [
-            {
-                name: "MONOMAX SPORTS TV FHD",
-                logo: "",
-                file: "https://live-tv.monomax.me/v1/019d38969c6c150b585a1f99efcb45/019e96a14f12150b585a122d294a26/main.m3u8",
-                drm: false,
-                category: "ช่องกีฬา"
-            },
             {
                 name: "MUTV",
                 logo: "",
@@ -410,48 +449,89 @@
             jwplayer("player").setup(config);
         }
 
-        // --- ส่วนการสร้างรายการช่องแบบแบ่งหมวดหมู่ (Category Grouping) ---
+        // --- ส่วนการจัดการหมวดหมู่และการกรองข้อมูล (Category Filtering) ---
         const channelList = document.getElementById("channel-list");
+        const categoryFilter = document.getElementById("category-filter");
 
-        // 1. นำข้อมูล channels มาจัดกลุ่มตาม category
+        // 1. นำข้อมูล channels มาจัดกลุ่ม
         const groupedChannels = channels.reduce((acc, channel) => {
             const cat = channel.category || "ช่องทั่วไป";
-            if (!acc[cat]) {
-                acc[cat] = [];
-            }
+            if (!acc[cat]) acc[cat] = [];
             acc[cat].push(channel);
             return acc;
         }, {});
 
-        // 2. แสดงผลแยกตามหมวดหมู่ลง Sidebar
-        let itemIndex = 1;
-        for (const category in groupedChannels) {
-            // สร้างหัวข้อหมวดหมู่
-            const catHeader = document.createElement("div");
-            catHeader.className = "category-title";
-            catHeader.textContent = category;
-            channelList.appendChild(catHeader);
+        // 2. ฟังก์ชันเรนเดอร์ช่องทีวี (กรองตาม selectedCategory)
+        function renderChannels(selectedCategory = 'ALL') {
+            channelList.innerHTML = ''; // ล้างรายการเก่า
+            let itemIndex = 1;
 
-            // สร้างปุ่มช่องทีวีในหมวดหมู่นั้นๆ
-            groupedChannels[category].forEach((channel) => {
-                const div = document.createElement("div");
-                div.className = "channel";
-                div.tabIndex = itemIndex++;
+            for (const category in groupedChannels) {
+                // ถ้าไม่ใช่หมวดหมู่ที่เลือก (และไม่ใช่แสดงทั้งหมด 'ALL') ให้ข้ามไป
+                if (selectedCategory !== 'ALL' && category !== selectedCategory) {
+                    continue;
+                }
 
-                const logoHtml = channel.logo 
-                    ? `<img src="${channel.logo}" alt="${channel.name}">`
-                    : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
+                // สร้างหัวข้อหมวดหมู่
+                const catHeader = document.createElement("div");
+                catHeader.className = "category-title";
+                catHeader.textContent = category;
+                channelList.appendChild(catHeader);
 
-                div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
+                // สร้างปุ่มช่องทีวี
+                groupedChannels[category].forEach((channel) => {
+                    const div = document.createElement("div");
+                    div.className = "channel";
+                    div.tabIndex = itemIndex++;
 
-                div.onclick = () => loadPlayer(channel);
-                div.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') loadPlayer(channel);
+                    const logoHtml = channel.logo 
+                        ? `<img src="${channel.logo}" alt="${channel.name}">`
+                        : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
+
+                    div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
+
+                    div.onclick = () => loadPlayer(channel);
+                    div.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') loadPlayer(channel);
+                    });
+
+                    channelList.appendChild(div);
                 });
-
-                channelList.appendChild(div);
-            });
+            }
         }
+
+        // 3. ฟังก์ชันสร้างปุ่มกรองหมวดหมู่ด้านบน (Category Buttons)
+        function renderCategoryButtons() {
+            categoryFilter.innerHTML = '';
+
+            // ปุ่ม "ทั้งหมด"
+            const allBtn = document.createElement('button');
+            allBtn.className = 'cat-btn active';
+            allBtn.textContent = 'ทั้งหมด';
+            allBtn.onclick = () => {
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                allBtn.classList.add('active');
+                renderChannels('ALL');
+            };
+            categoryFilter.appendChild(allBtn);
+
+            // ปุ่มหมวดหมู่ตามข้อมูลจริง
+            for (const category in groupedChannels) {
+                const btn = document.createElement('button');
+                btn.className = 'cat-btn';
+                btn.textContent = category;
+                btn.onclick = () => {
+                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderChannels(category); // เรนเดอร์เฉพาะหมวดหมู่ที่กดเลือก
+                };
+                categoryFilter.appendChild(btn);
+            }
+        }
+
+        // เริ่มต้นการทำงาน
+        renderCategoryButtons();
+        renderChannels('ALL'); // เริ่มต้นแสดงทุกช่อง
 
         // เล่นช่องแรกทันทีเมื่อเปิดหน้าเว็บ
         if (channels.length > 0) {
