@@ -23,7 +23,7 @@
             overflow: hidden;
         }
 
-        /* 📺 ส่วนของเครื่องเล่นวิดีโอ (บังคับเต็มจอ 100%) */
+        /* 📺 เครื่องเล่นวิดีโอ */
         .player-container {
             position: absolute;
             top: 0;
@@ -37,7 +37,7 @@
             height: 100% !important;
         }
 
-        /* 🖱️ พื้นที่ดักจับเมาส์ขอบซ้ายจอ (Invisible Trigger Zone) */
+        /* 🖱️ พื้นที่ดักจับเมาส์ขอบซ้าย */
         .sidebar-trigger {
             position: absolute;
             top: 0;
@@ -51,7 +51,7 @@
         #sidebar {
             position: absolute;
             top: 0;
-            left: -340px; /* ซ่อนไว้ด้านซ้าย */
+            left: -340px;
             width: 320px;
             height: 100%;
             background: rgba(15, 15, 15, 0.95);
@@ -63,7 +63,6 @@
             flex-direction: column;
         }
 
-        /* กลไกเมื่อเมาส์ Hover ที่พื้นที่ดักจับ หรือที่ตัว Sidebar ให้สไลด์เมนูออกมา */
         .sidebar-trigger:hover + #sidebar,
         #sidebar:hover {
             left: 0;
@@ -73,126 +72,129 @@
             color: orange;
             text-align: center;
             font-size: 20px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
         }
 
-        /* 🔘 แถบเลือกหมวดหมู่ (Category Filter Container) */
-        #category-filter {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #333;
-        }
-
-        #category-filter::-webkit-scrollbar {
-            height: 4px;
-        }
-        #category-filter::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 2px;
-        }
-
-        /* ปุ่มเลือกหมวดหมู่แต่ละปุ่ม */
-        .cat-btn {
-            background: #2a2a2a;
-            color: #ccc;
-            border: 1px solid #444;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-
-        .cat-btn:hover {
-            background: #444;
-            color: #fff;
-        }
-
-        /* ปุ่มหมวดหมู่ที่กำลังถูกเลือก */
-        .cat-btn.active {
-            background: orange;
-            color: #000;
-            font-weight: bold;
-            border-color: orange;
-        }
-
-        /* 📜 รายการกล่องช่องทีวี */
-        #channel-list {
+        /* 📜 เมนู Tree View Container */
+        #tree-menu {
             flex-grow: 1;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
             padding-right: 5px;
         }
 
-        /* ปรับแต่งความสวยงามของ Scrollbar บนเมนู */
-        #channel-list::-webkit-scrollbar {
+        #tree-menu::-webkit-scrollbar {
             width: 6px;
         }
-        #channel-list::-webkit-scrollbar-thumb {
+        #tree-menu::-webkit-scrollbar-thumb {
             background: #444;
             border-radius: 3px;
         }
 
-        /* 🏷️ ตกแต่งหัวข้อหมวดหมู่ */
-        .category-title {
-            color: #ff9800;
-            font-size: 14px;
+        /* ปุ่ม "ทั้งหมด" ด้านบนสุด */
+        .all-channels-btn {
+            font-size: 18px;
             font-weight: bold;
-            padding: 10px 5px 5px 5px;
-            margin-top: 5px;
-            border-bottom: 1px dashed #444;
-            text-transform: uppercase;
+            color: #fff;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
         }
-        .category-title:first-child {
-            margin-top: 0;
+        .all-channels-btn:hover {
+            background: #222;
+            color: orange;
         }
 
-        /* 🔳 ปุ่มช่องทีวีแต่ละช่อง */
-        .channel {
+        /* หัวข้อหมวดหมู่ (Category Header) */
+        .category-item {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            padding: 10px 12px;
             cursor: pointer;
-            padding: 10px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 8px;
-            text-align: center;
-            width: 100%;
-            min-height: 70px;
+            border-radius: 6px;
+            margin-top: 4px;
             display: flex;
-            justify-content: flex-start;
             align-items: center;
+            justify-content: space-between;
+            user-select: none;
             transition: all 0.2s;
-            overflow: hidden;
-            gap: 12px;
         }
-        .channel img {
-            width: 50px;
-            height: 40px;
-            object-fit: contain;
-            display: block;
-            background: #111;
-            border-radius: 4px;
+        .category-item:hover {
+            background: #222;
+            color: orange;
         }
-        .channel-name {
-            font-size: 15px;
-            text-align: left;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .category-item::after {
+            content: '▶';
+            font-size: 10px;
+            color: orange;
+            transition: transform 0.2s;
         }
-        .channel:hover, .channel:focus {
+        .category-item.open::after {
+            transform: rotate(90deg);
+        }
+
+        /* Container สำหรับรายการช่องย่อย ( Tree Sub-menu ) */
+        .channel-sub-group {
+            display: none; /* ซ่อนไว้ก่อน */
+            position: relative;
+            margin-left: 25px;
+            padding-left: 15px;
+        }
+
+        /* เส้นแกนหลักแนวยาวสีส้ม */
+        .channel-sub-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 20px;
+            left: 0;
+            width: 2px;
             background: orange;
-            color: black;
-            border-color: #fff;
-            transform: scale(1.02);
-            outline: none;
+        }
+
+        .category-item.open + .channel-sub-group {
+            display: block; /* แสดงผลเมื่อคลิกเปิด */
+        }
+
+        /* รายการช่องย่อยแต่ละช่อง */
+        .channel-node {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 4px 0;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        /* เส้นกิ่งแขนงสีส้มแนวนอนที่เชื่อมกับแกนหลัก */
+        .channel-node::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            width: 15px;
+            height: 2px;
+            background: orange;
+        }
+
+        .channel-node:hover {
+            background: #333;
+        }
+
+        .channel-node-name {
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .channel-node:hover .channel-node-name {
+            color: orange;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -201,12 +203,10 @@
     <!-- พื้นที่ดักจับเมาส์ขอบซ้ายจอ -->
     <div class="sidebar-trigger"></div>
 
-    <!-- เมนูด้านซ้าย (ซ่อนอยู่) -->
+    <!-- เมนูด้านซ้าย -->
     <nav id="sidebar">
         <h2>ช่องทางธรรมชาติ</h2>
-        <!-- 🔘 เพิ่มแถบตัวกรองหมวดหมู่ตรงนี้ -->
-        <div id="category-filter"></div>
-        <div id="channel-list"></div>
+        <div id="tree-menu"></div>
     </nav>
 
     <!-- เครื่องเล่นวิดีโอเต็มจอ -->
@@ -216,6 +216,13 @@
 
     <script>
         const channels = [
+            {
+                name: "MONOMAX SPORTS TV FHD",
+                logo: "",
+                file: "https://live-tv.monomax.me/v1/019d38969c6c150b585a1f99efcb45/019e96a14f12150b585a122d294a26/main.m3u8",
+                drm: false,
+                category: "ช่องกีฬา"
+            },
             {
                 name: "MUTV",
                 logo: "",
@@ -449,11 +456,10 @@
             jwplayer("player").setup(config);
         }
 
-        // --- ส่วนการจัดการหมวดหมู่และการกรองข้อมูล (Category Filtering) ---
-        const channelList = document.getElementById("channel-list");
-        const categoryFilter = document.getElementById("category-filter");
+        // --- สร้าง Tree View Menu ---
+        const treeMenu = document.getElementById("tree-menu");
 
-        // 1. นำข้อมูล channels มาจัดกลุ่ม
+        // 1. จัดกลุ่มช่องตาม Category
         const groupedChannels = channels.reduce((acc, channel) => {
             const cat = channel.category || "ช่องทั่วไป";
             if (!acc[cat]) acc[cat] = [];
@@ -461,79 +467,61 @@
             return acc;
         }, {});
 
-        // 2. ฟังก์ชันเรนเดอร์ช่องทีวี (กรองตาม selectedCategory)
-        function renderChannels(selectedCategory = 'ALL') {
-            channelList.innerHTML = ''; // ล้างรายการเก่า
-            let itemIndex = 1;
+        // 2. สร้างปุ่ม "ทั้งหมด"
+        const allBtn = document.createElement("div");
+        allBtn.className = "all-channels-btn";
+        allBtn.textContent = "ทั้งหมด";
+        allBtn.onclick = () => {
+            // ปิดการคลี่เมนูทั้งหมด
+            document.querySelectorAll(".category-item").forEach(el => el.classList.remove("open"));
+        };
+        treeMenu.appendChild(allBtn);
 
-            for (const category in groupedChannels) {
-                // ถ้าไม่ใช่หมวดหมู่ที่เลือก (และไม่ใช่แสดงทั้งหมด 'ALL') ให้ข้ามไป
-                if (selectedCategory !== 'ALL' && category !== selectedCategory) {
-                    continue;
+        // 3. วนลูปสร้างหมวดหมู่และโหนดช่องย่อย
+        let isFirstCategory = true;
+        for (const category in groupedChannels) {
+            // หัวข้อหมวดหมู่
+            const catDiv = document.createElement("div");
+            catDiv.className = "category-item";
+            catDiv.textContent = category;
+
+            // คอนเทนเนอร์เก็บช่องย่อย
+            const subGroup = document.createElement("div");
+            subGroup.className = "channel-sub-group";
+
+            // สลับการ เปิด/ปิด ( Accordion Effect )
+            catDiv.onclick = () => {
+                const isOpen = catDiv.classList.contains("open");
+                // ซ่อนหมวดหมู่อื่นไว้ก่อน
+                document.querySelectorAll(".category-item").forEach(el => el.classList.remove("open"));
+                if (!isOpen) {
+                    catDiv.classList.add("open");
                 }
-
-                // สร้างหัวข้อหมวดหมู่
-                const catHeader = document.createElement("div");
-                catHeader.className = "category-title";
-                catHeader.textContent = category;
-                channelList.appendChild(catHeader);
-
-                // สร้างปุ่มช่องทีวี
-                groupedChannels[category].forEach((channel) => {
-                    const div = document.createElement("div");
-                    div.className = "channel";
-                    div.tabIndex = itemIndex++;
-
-                    const logoHtml = channel.logo 
-                        ? `<img src="${channel.logo}" alt="${channel.name}">`
-                        : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
-
-                    div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
-
-                    div.onclick = () => loadPlayer(channel);
-                    div.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') loadPlayer(channel);
-                    });
-
-                    channelList.appendChild(div);
-                });
-            }
-        }
-
-        // 3. ฟังก์ชันสร้างปุ่มกรองหมวดหมู่ด้านบน (Category Buttons)
-        function renderCategoryButtons() {
-            categoryFilter.innerHTML = '';
-
-            // ปุ่ม "ทั้งหมด"
-            const allBtn = document.createElement('button');
-            allBtn.className = 'cat-btn active';
-            allBtn.textContent = 'ทั้งหมด';
-            allBtn.onclick = () => {
-                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-                allBtn.classList.add('active');
-                renderChannels('ALL');
             };
-            categoryFilter.appendChild(allBtn);
 
-            // ปุ่มหมวดหมู่ตามข้อมูลจริง
-            for (const category in groupedChannels) {
-                const btn = document.createElement('button');
-                btn.className = 'cat-btn';
-                btn.textContent = category;
-                btn.onclick = () => {
-                    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    renderChannels(category); // เรนเดอร์เฉพาะหมวดหมู่ที่กดเลือก
+            // สร้างกิ่งย่อยแต่ละช่อง
+            groupedChannels[category].forEach(channel => {
+                const node = document.createElement("div");
+                node.className = "channel-node";
+                node.innerHTML = `<span class="channel-node-name">${channel.name}</span>`;
+                node.onclick = (e) => {
+                    e.stopPropagation(); // กันไม่ให้ไปกระทบการคลิกหมวดหมู่
+                    loadPlayer(channel);
                 };
-                categoryFilter.appendChild(btn);
+                subGroup.appendChild(node);
+            });
+
+            treeMenu.appendChild(catDiv);
+            treeMenu.appendChild(subGroup);
+
+            // เปิดกางหมวดหมู่แรกไว้เป็น Default
+            if (isFirstCategory) {
+                catDiv.classList.add("open");
+                isFirstCategory = false;
             }
         }
 
-        // เริ่มต้นการทำงาน
-        renderCategoryButtons();
-        renderChannels('ALL'); // เริ่มต้นแสดงทุกช่อง
-
-        // เล่นช่องแรกทันทีเมื่อเปิดหน้าเว็บ
+        // เล่นช่องแรกทันทีเมื่อเปิดเว็บ
         if (channels.length > 0) {
             loadPlayer(channels[0]);
         }
