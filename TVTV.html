@@ -92,22 +92,6 @@
             border-radius: 3px;
         }
 
-        /* ปุ่ม "ทั้งหมด" ด้านบนสุด */
-        .all-channels-btn {
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-            padding: 8px 12px;
-            cursor: pointer;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            transition: background 0.2s;
-        }
-        .all-channels-btn:hover {
-            background: #222;
-            color: orange;
-        }
-
         /* หัวข้อหมวดหมู่ (Category Header) */
         .category-item {
             font-size: 16px;
@@ -216,13 +200,6 @@
 
     <script>
         const channels = [
-            {
-                name: "MONOMAX SPORTS TV FHD",
-                logo: "",
-                file: "https://live-tv.monomax.me/v1/019d38969c6c150b585a1f99efcb45/019e96a14f12150b585a122d294a26/main.m3u8",
-                drm: false,
-                category: "ช่องกีฬา"
-            },
             {
                 name: "MUTV",
                 logo: "",
@@ -467,17 +444,7 @@
             return acc;
         }, {});
 
-        // 2. สร้างปุ่ม "ทั้งหมด"
-        const allBtn = document.createElement("div");
-        allBtn.className = "all-channels-btn";
-        allBtn.textContent = "ทั้งหมด";
-        // ✅ โค้ดใหม่: กด "ทั้งหมด" แล้วเปิดกางทุกหมวดหมู่ออกมาทันที
-        allBtn.onclick = () => {
-    document.querySelectorAll(".category-item").forEach(el => el.classList.add("open"));
-};
-        treeMenu.appendChild(allBtn);
-
-        // 3. วนลูปสร้างหมวดหมู่และโหนดช่องย่อย
+        // 2. วนลูปสร้างหมวดหมู่และโหนดช่องย่อย
         let isFirstCategory = true;
         for (const category in groupedChannels) {
             // หัวข้อหมวดหมู่
