@@ -471,10 +471,10 @@
         const allBtn = document.createElement("div");
         allBtn.className = "all-channels-btn";
         allBtn.textContent = "ทั้งหมด";
+        // ✅ โค้ดใหม่: กด "ทั้งหมด" แล้วเปิดกางทุกหมวดหมู่ออกมาทันที
         allBtn.onclick = () => {
-            // ปิดการคลี่เมนูทั้งหมด
-            document.querySelectorAll(".category-item").forEach(el => el.classList.remove("open"));
-        };
+    document.querySelectorAll(".category-item").forEach(el => el.classList.add("open"));
+};
         treeMenu.appendChild(allBtn);
 
         // 3. วนลูปสร้างหมวดหมู่และโหนดช่องย่อย
