@@ -1,0 +1,10 @@
+#EXTM3U
+
+#EXTINF:-1 tvg-id="ch4" group-title="Sports", MUTV
+https://get.perfecttv.net/mutv.mpd
+
+#EXTINF:-1 tvg-id="ch4" group-title="Sports", MUTV 2
+http://fr5k.com:8080/9936568318240943/9936568318240943/397633
+
+#EXTINF:-1 tvg-id="ch4" group-title="Sports", MUTV 3
+https://raw.githubusercontent.com/AusawinNuang/AusawinChannel/f2447a1942dba58195d3e2d91b98d806082f2f03/MUTV.m3u8
