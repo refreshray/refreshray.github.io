@@ -1,1 +1,301 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPTV Universal Web Player</title>
+  <!-- Shaka Player UI CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/controls.min.css">
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --accent-color: #0088cc;
+      --text-color: #ffffff;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 850px) {
+      .container { grid-template-columns: 2fr 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    h2, h3 { margin-top: 0; color: var(--accent-color); }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 0.85em; margin-bottom: 4px; color: #ccc; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 4px;
+      box-sizing: border-box;
+      margin-bottom: 5px;
+    }
+    button {
+      background-color: var(--accent-color);
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background-color: #006699; }
+    video-container { width: 100%; }
+    .playlist-box {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      padding: 5px;
+      border-radius: 4px;
+    }
+    .channel-item {
+      padding: 8px 10px;
+      background: #282828;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .channel-item:hover { background: var(--accent-color); }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 0.75em;
+      background: #444;
+      border-radius: 3px;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
 
+<div class="container">
+  
+  <!-- ฝั่งซ้าย: เครื่องเล่นวิดีโอ & การตั้งค่าเล่น -->
+  <div>
+    <div class="card">
+      <h2>IPTV Player (Shaka Engine)</h2>
+      
+      <!-- Video Element -->
+      <div data-shaka-player-container style="width: 100%;">
+        <video data-shaka-player id="video" style="width:100%; height:auto;" autoplay controls></video>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+      <h3>ตั้งค่าการเล่น (Stream & CORS & DRM)</h3>
+      
+      <div class="form-group">
+        <label>Stream URL (.m3u8, .ts, .mpd):</label>
+        <input type="text" id="streamUrl" placeholder="http://example.com/live/stream.m3u8">
+      </div>
+
+      <div class="form-group">
+        <label>CORS & Mixed Content Proxy Solution:</label>
+        <select id="proxySelect" onchange="toggleCustomProxy()">
+          <option value="none">Direct (ไม่ผ่าน Proxy - สำหรับ HTTPS & เปิด CORS แล้ว)</option>
+          <option value="corsproxy" selected>Corsproxy.io (แนะนำสำหรับทั่วไป)</option>
+          <option value="allorigins">AllOrigins Proxy (สำหรับไฟล์ Text / M3U)</option>
+          <option value="custom">Custom Proxy (ใส่ Node.js / Cloudflare Worker เอง)</option>
+        </select>
+        <input type="text" id="customProxyUrl" placeholder="https://your-worker.workers.dev/?url=" style="display:none;">
+      </div>
+
+      <hr style="border-color: #333; margin: 15px 0;">
+
+      <div class="form-group">
+        <label>DRM - ClearKey (ถ้ามี):</label>
+        <input type="text" id="keyId" placeholder="Key ID (e.g. 142277d33b6644bb...)">
+        <input type="text" id="key" placeholder="Key (e.g. ac097bd8556a3e11...)">
+      </div>
+
+      <div class="form-group">
+        <label>DRM - Widevine License URL (ถ้ามี):</label>
+        <input type="text" id="widevineUrl" placeholder="https://license.example.com/widevine">
+      </div>
+
+      <button onclick="playStream()">เล่นวิดีโอ (Play)</button>
+    </div>
+  </div>
+
+  <!-- ฝั่งขวา: โหลด M3U Playlist -->
+  <div>
+    <div class="card">
+      <h3>นำเข้า M3U Playlist</h3>
+      <div class="form-group">
+        <label>M3U URL หรือ Xtream M3U Link:</label>
+        <input type="text" id="m3uUrl" placeholder="http://domain:8080/get.php?username=...&password=...">
+        <button onclick="loadM3U()">โหลดรายการช่อง (Load M3U)</button>
+      </div>
+
+      <div class="playlist-box" id="playlistBox">
+        <div style="text-align: center; color: #777; padding: 20px;">ยังไม่มีรายการช่อง</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Shaka Player JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.ui.js"></script>
+
+<script>
+  let player;
+
+  // 1. Initialize Shaka Player
+  async function initPlayer() {
+    const video = document.getElementById('video');
+    player = new shaka.Player(video);
+
+    // ดักจับ Error
+    player.addEventListener('error', (event) => {
+      console.error('Shaka Error:', event.detail);
+      alert('เกิดข้อผิดพลาดในการเล่น: ' + event.detail.message);
+    });
+  }
+
+  // Show/Hide Custom Proxy Input
+  function toggleCustomProxy() {
+    const proxySelect = document.getElementById('proxySelect').value;
+    const customInput = document.getElementById('customProxyUrl');
+    customInput.style.display = (proxySelect === 'custom') ? 'block' : 'none';
+  }
+
+  // 2. แปลง URL ผ่าน CORS Proxy
+  function getProxiedUrl(targetUrl) {
+    const proxyType = document.getElementById('proxySelect').value;
+    
+    if (proxyType === 'none' || !targetUrl) {
+      return targetUrl;
+    } else if (proxyType === 'corsproxy') {
+      return 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+    } else if (proxyType === 'allorigins') {
+      return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
+    } else if (proxyType === 'custom') {
+      const customPrefix = document.getElementById('customProxyUrl').value;
+      return customPrefix + encodeURIComponent(targetUrl);
+    }
+    return targetUrl;
+  }
+
+  // 3. ฟังก์ชันเล่นวิดีโอ
+  async function playStream(overrideUrl = null) {
+    let url = overrideUrl || document.getElementById('streamUrl').value.trim();
+    if (!url) {
+      alert('กรุณากรอก Stream URL');
+      return;
+    }
+
+    // ประมวลผลผ่าน Proxy
+    const finalUrl = getProxiedUrl(url);
+
+    // ตั้งค่า DRM
+    const keyId = document.getElementById('keyId').value.trim();
+    const key = document.getElementById('key').value.trim();
+    const widevineUrl = document.getElementById('widevineUrl').value.trim();
+
+    const drmConfig = {};
+    if (keyId && key) {
+      drmConfig.clearKeys = {};
+      drmConfig.clearKeys[keyId] = key;
+    }
+    if (widevineUrl) {
+      drmConfig.servers = { 'com.widevine.alpha': getProxiedUrl(widevineUrl) };
+    }
+
+    player.configure({ drm: drmConfig });
+
+    try {
+      await player.load(finalUrl);
+      console.log('สตรีมพร้อมใช้งานแล้ว:', finalUrl);
+    } catch (e) {
+      console.error('Error loading stream:', e);
+      alert('ไม่สามารถเปิดเล่นสตรีมนี้ได้ (ตรวจสอบ CORS / DRM / URL)');
+    }
+  }
+
+  // 4. ฟังก์ชันดึงและ parse M3U Playlist
+  async function loadM3U() {
+    const m3uUrl = document.getElementById('m3uUrl').value.trim();
+    const playlistBox = document.getElementById('playlistBox');
+
+    if (!m3uUrl) {
+      alert('กรุณากรอก M3U URL');
+      return;
+    }
+
+    playlistBox.innerHTML = '<div style="text-align:center; padding:10px;">กำลังโหลด...</div>';
+
+    try {
+      const proxiedM3uUrl = getProxiedUrl(m3uUrl);
+      const response = await fetch(proxiedM3uUrl);
+      const text = await response.text();
+
+      // Simple M3U Parser
+      const lines = text.split('\n');
+      playlistBox.innerHTML = '';
+      let currentTitle = '';
+
+      lines.forEach((line) => {
+        line = line.trim();
+        if (line.startsWith('#EXTINF:')) {
+          const titleParts = line.split(',');
+          currentTitle = titleParts[titleParts.length - 1] || 'ช่องรายการไม่มีชื่อ';
+        } else if (line.length > 0 && !line.startsWith('#')) {
+          const channelUrl = line;
+          
+          const item = document.createElement('div');
+          item.className = 'channel-item';
+          item.innerHTML = `${currentTitle} <span class="badge">${getUrlExt(channelUrl)}</span>`;
+          item.onclick = () => {
+            document.getElementById('streamUrl').value = channelUrl;
+            playStream(channelUrl);
+          };
+          
+          playlistBox.appendChild(item);
+          currentTitle = '';
+        }
+      });
+
+      if (playlistBox.children.length === 0) {
+        playlistBox.innerHTML = '<div style="text-align:center; color:red;">ไม่พบช่องรายการในไฟล์นี้</div>';
+      }
+
+    } catch (err) {
+      console.error(err);
+      playlistBox.innerHTML = '<div style="text-align:center; color:red;">เกิดข้อผิดพลาดในการดึง M3U</div>';
+    }
+  }
+
+  function getUrlExt(url) {
+    if (url.includes('.m3u8')) return 'HLS';
+    if (url.includes('.mpd')) return 'DASH';
+    if (url.includes('.ts')) return 'TS';
+    return 'STREAM';
+  }
+
+  document.addEventListener('DOMContentLoaded', initPlayer);
+</script>
+
+</body>
+</html>
