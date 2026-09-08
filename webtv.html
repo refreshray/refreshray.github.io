@@ -1,301 +1,275 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPTV Universal Web Player</title>
-  <!-- Shaka Player UI CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/controls.min.css">
-  <style>
-    :root {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
-      --accent-color: #0088cc;
-      --text-color: #ffffff;
-    }
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-    @media (min-width: 850px) {
-      .container { grid-template-columns: 2fr 1fr; }
-    }
-    .card {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    h2, h3 { margin-top: 0; color: var(--accent-color); }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 0.85em; margin-bottom: 4px; color: #ccc; }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      background: #2a2a2a;
-      border: 1px solid #444;
-      color: #fff;
-      border-radius: 4px;
-      box-sizing: border-box;
-      margin-bottom: 5px;
-    }
-    button {
-      background-color: var(--accent-color);
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background-color: #006699; }
-    video-container { width: 100%; }
-    .playlist-box {
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #333;
-      padding: 5px;
-      border-radius: 4px;
-    }
-    .channel-item {
-      padding: 8px 10px;
-      background: #282828;
-      margin-bottom: 4px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .channel-item:hover { background: var(--accent-color); }
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      font-size: 0.75em;
-      background: #444;
-      border-radius: 3px;
-      margin-left: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ช่องทางธรรมชาติ</title>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
+    <script>
+        jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* 📺 ส่วนของเครื่องเล่นวิดีโอ (บังคับเต็มจอ 100%) */
+        .player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #player {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* 🖱️ พื้นที่ดักจับเมาส์ขอบซ้ายจอ (Invisible Trigger Zone) */
+        .sidebar-trigger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 100%;
+            z-index: 999;
+        }
+
+        /* 🗂️ เมนูด้านซ้าย (Sidebar) */
+        #sidebar {
+            position: absolute;
+            top: 0;
+            left: -340px; /* ซ่อนไว้ด้านซ้าย */
+            width: 320px;
+            height: 100%;
+            background: rgba(15, 15, 15, 0.95);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+            transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1000;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* กลไกเมื่อเมาส์ Hover ที่พื้นที่ดักจับ หรือที่ตัว Sidebar ให้สไลด์เมนูออกมา */
+        .sidebar-trigger:hover + #sidebar,
+        #sidebar:hover {
+            left: 0;
+        }
+
+        #sidebar h2 {
+            color: orange;
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* 📜 รายการกล่องช่องทีวี (เปลี่ยนเป็นแนวตั้ง) */
+        #channel-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 5px;
+        }
+
+        /* ปรับแต่งความสวยงามของ Scrollbar บนเมนู */
+        #channel-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #channel-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        /* 🔳 ปุ่มช่องทีวีแต่ละช่อง */
+        .channel {
+            cursor: pointer;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            text-align: center;
+            width: 100%; /* เต็มความกว้างของเมนู */
+            min-height: 70px;
+            display: flex;
+            justify-content: flex-start; /* จัดโลโก้และข้อความเรียงไปทางขวา */
+            align-items: center;
+            transition: all 0.2s;
+            overflow: hidden;
+            gap: 12px;
+        }
+        .channel img {
+            width: 50px;
+            height: 40px;
+            object-fit: contain;
+            display: block;
+            background: #111;
+            border-radius: 4px;
+        }
+        .channel-name {
+            font-size: 15px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .channel:hover, .channel:focus {
+            background: orange;
+            color: black;
+            border-color: #fff;
+            transform: scale(1.02);
+            outline: none;
+        }
+
+        /* 🌟 CSS เพิ่มเติม: สถานะช่องที่กำลังเล่นอยู่ (Active State) */
+        .channel.active {
+            background: orange;
+            color: black;
+            border-color: #fff;
+            font-weight: bold;
+        }
+
+    </style>
 </head>
 <body>
 
-<div class="container">
-  
-  <!-- ฝั่งซ้าย: เครื่องเล่นวิดีโอ & การตั้งค่าเล่น -->
-  <div>
-    <div class="card">
-      <h2>IPTV Player (Shaka Engine)</h2>
-      
-      <!-- Video Element -->
-      <div data-shaka-player-container style="width: 100%;">
-        <video data-shaka-player id="video" style="width:100%; height:auto;" autoplay controls></video>
-      </div>
+    <!-- พื้นที่ดักจับเมาส์ขอบซ้ายจอ -->
+    <div class="sidebar-trigger"></div>
+
+    <!-- เมนูด้านซ้าย (ซ่อนอยู่) -->
+    <nav id="sidebar">
+        <h2>ช่องทางธรรมชาติ</h2>
+        <div id="channel-list"></div>
+    </nav>
+
+    <!-- เครื่องเล่นวิดีโอเต็มจอ -->
+    <div class="player-container">
+        <div id="player"></div>
     </div>
 
-    <div class="card" style="margin-top: 20px;">
-      <h3>ตั้งค่าการเล่น (Stream & CORS & DRM)</h3>
-      
-      <div class="form-group">
-        <label>Stream URL (.m3u8, .ts, .mpd):</label>
-        <input type="text" id="streamUrl" placeholder="http://example.com/live/stream.m3u8">
-      </div>
+    <script>
+        // รายการช่องของคุณ (สามารถนำลิสต์ทั้งหมดมาใส่ต่อตรงนี้ได้เลย)
+        const channels = [
+            {
+                name: "CARTOON NETWORK ",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/301/301.mpd",
+                keyId: "f140b94c73ab4ef5b96da7f49afb1154",
+                key: "85e4ef232c6e460f888eb20f651d66e3",
+                drm: true
+            },
+            {
+                name: "Cartoonito",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/302/302.mpd",
+                keyId: "ad2371259d34404cb89d54a4dc88dcd3",
+                key: "1ba155e345c4456ba891cbee9b3e1c4c",
+                drm: true
+            },
+            {
+                name: "Nickelodeo",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/303/303.mpd",
+                keyId: "9130a6448a74430794d355b48b56a64c",
+                key: "c2f4d3288cdb43cf81e519ceb414dd6f",
+                drm: true
+            },
+            {
+                name: "Nickjr",
+                logo: "",
+                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/304/304.mpd",
+                keyId: "641c3f0e676d49d18c2082e093380e69",
+                key: "e06f3a2e327643249c3831ab199c4015",
+                drm: true
+            },      
+            {
+                name: "Food_Network",
+                logo: "",
+                file: "https://cri-streamer3.cdn.3bbtv.com:8443/3bb/live/205/205.mpd",
+                keyId: "d4b9d55410d24905920e57664a047116",
+                key: "d821110f280f4545ae0227d5784af199",
+                drm: true
+            }
+        ];
 
-      <div class="form-group">
-        <label>CORS & Mixed Content Proxy Solution:</label>
-        <select id="proxySelect" onchange="toggleCustomProxy()">
-          <option value="none">Direct (ไม่ผ่าน Proxy - สำหรับ HTTPS & เปิด CORS แล้ว)</option>
-          <option value="corsproxy" selected>Corsproxy.io (แนะนำสำหรับทั่วไป)</option>
-          <option value="allorigins">AllOrigins Proxy (สำหรับไฟล์ Text / M3U)</option>
-          <option value="custom">Custom Proxy (ใส่ Node.js / Cloudflare Worker เอง)</option>
-        </select>
-        <input type="text" id="customProxyUrl" placeholder="https://your-worker.workers.dev/?url=" style="display:none;">
-      </div>
+        function loadPlayer(channel, element) {
+            const config = {
+                file: channel.file,
+                width: "100%",
+                height: "100%",
+                autostart: true,
+                mute: false
+            };
 
-      <hr style="border-color: #333; margin: 15px 0;">
+            // ถ้าเป็นไฟล์ .mpd + drm
+            if (channel.drm) {
+                config.type = "dash";
+                config.drm = {
+                    clearkey: {
+                        keyId: channel.keyId,
+                        key: channel.key
+                    }
+                };
+            } else {
+                // ถ้าไฟล์ .m3u8 (HLS)
+                config.type = "hls";
+            }
 
-      <div class="form-group">
-        <label>DRM - ClearKey (ถ้ามี):</label>
-        <input type="text" id="keyId" placeholder="Key ID (e.g. 142277d33b6644bb...)">
-        <input type="text" id="key" placeholder="Key (e.g. ac097bd8556a3e11...)">
-      </div>
+            jwplayer("player").setup(config);
 
-      <div class="form-group">
-        <label>DRM - Widevine License URL (ถ้ามี):</label>
-        <input type="text" id="widevineUrl" placeholder="https://license.example.com/widevine">
-      </div>
-
-      <button onclick="playStream()">เล่นวิดีโอ (Play)</button>
-    </div>
-  </div>
-
-  <!-- ฝั่งขวา: โหลด M3U Playlist -->
-  <div>
-    <div class="card">
-      <h3>นำเข้า M3U Playlist</h3>
-      <div class="form-group">
-        <label>M3U URL หรือ Xtream M3U Link:</label>
-        <input type="text" id="m3uUrl" placeholder="http://domain:8080/get.php?username=...&password=...">
-        <button onclick="loadM3U()">โหลดรายการช่อง (Load M3U)</button>
-      </div>
-
-      <div class="playlist-box" id="playlistBox">
-        <div style="text-align: center; color: #777; padding: 20px;">ยังไม่มีรายการช่อง</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- Shaka Player JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.ui.js"></script>
-
-<script>
-  let player;
-
-  // 1. Initialize Shaka Player
-  async function initPlayer() {
-    const video = document.getElementById('video');
-    player = new shaka.Player(video);
-
-    // ดักจับ Error
-    player.addEventListener('error', (event) => {
-      console.error('Shaka Error:', event.detail);
-      alert('เกิดข้อผิดพลาดในการเล่น: ' + event.detail.message);
-    });
-  }
-
-  // Show/Hide Custom Proxy Input
-  function toggleCustomProxy() {
-    const proxySelect = document.getElementById('proxySelect').value;
-    const customInput = document.getElementById('customProxyUrl');
-    customInput.style.display = (proxySelect === 'custom') ? 'block' : 'none';
-  }
-
-  // 2. แปลง URL ผ่าน CORS Proxy
-  function getProxiedUrl(targetUrl) {
-    const proxyType = document.getElementById('proxySelect').value;
-    
-    if (proxyType === 'none' || !targetUrl) {
-      return targetUrl;
-    } else if (proxyType === 'corsproxy') {
-      return 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
-    } else if (proxyType === 'allorigins') {
-      return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
-    } else if (proxyType === 'custom') {
-      const customPrefix = document.getElementById('customProxyUrl').value;
-      return customPrefix + encodeURIComponent(targetUrl);
-    }
-    return targetUrl;
-  }
-
-  // 3. ฟังก์ชันเล่นวิดีโอ
-  async function playStream(overrideUrl = null) {
-    let url = overrideUrl || document.getElementById('streamUrl').value.trim();
-    if (!url) {
-      alert('กรุณากรอก Stream URL');
-      return;
-    }
-
-    // ประมวลผลผ่าน Proxy
-    const finalUrl = getProxiedUrl(url);
-
-    // ตั้งค่า DRM
-    const keyId = document.getElementById('keyId').value.trim();
-    const key = document.getElementById('key').value.trim();
-    const widevineUrl = document.getElementById('widevineUrl').value.trim();
-
-    const drmConfig = {};
-    if (keyId && key) {
-      drmConfig.clearKeys = {};
-      drmConfig.clearKeys[keyId] = key;
-    }
-    if (widevineUrl) {
-      drmConfig.servers = { 'com.widevine.alpha': getProxiedUrl(widevineUrl) };
-    }
-
-    player.configure({ drm: drmConfig });
-
-    try {
-      await player.load(finalUrl);
-      console.log('สตรีมพร้อมใช้งานแล้ว:', finalUrl);
-    } catch (e) {
-      console.error('Error loading stream:', e);
-      alert('ไม่สามารถเปิดเล่นสตรีมนี้ได้ (ตรวจสอบ CORS / DRM / URL)');
-    }
-  }
-
-  // 4. ฟังก์ชันดึงและ parse M3U Playlist
-  async function loadM3U() {
-    const m3uUrl = document.getElementById('m3uUrl').value.trim();
-    const playlistBox = document.getElementById('playlistBox');
-
-    if (!m3uUrl) {
-      alert('กรุณากรอก M3U URL');
-      return;
-    }
-
-    playlistBox.innerHTML = '<div style="text-align:center; padding:10px;">กำลังโหลด...</div>';
-
-    try {
-      const proxiedM3uUrl = getProxiedUrl(m3uUrl);
-      const response = await fetch(proxiedM3uUrl);
-      const text = await response.text();
-
-      // Simple M3U Parser
-      const lines = text.split('\n');
-      playlistBox.innerHTML = '';
-      let currentTitle = '';
-
-      lines.forEach((line) => {
-        line = line.trim();
-        if (line.startsWith('#EXTINF:')) {
-          const titleParts = line.split(',');
-          currentTitle = titleParts[titleParts.length - 1] || 'ช่องรายการไม่มีชื่อ';
-        } else if (line.length > 0 && !line.startsWith('#')) {
-          const channelUrl = line;
-          
-          const item = document.createElement('div');
-          item.className = 'channel-item';
-          item.innerHTML = `${currentTitle} <span class="badge">${getUrlExt(channelUrl)}</span>`;
-          item.onclick = () => {
-            document.getElementById('streamUrl').value = channelUrl;
-            playStream(channelUrl);
-          };
-          
-          playlistBox.appendChild(item);
-          currentTitle = '';
+            // 🎯 จัดการไฮไลต์สีช่องที่กำลังเล่น
+            if (element) {
+                // เอา class active ออกจากทุกช่องก่อน
+                document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
+                // เพิ่ม class active ให้กับช่องที่ถูกเลือก
+                element.classList.add('active');
+            }
         }
-      });
 
-      if (playlistBox.children.length === 0) {
-        playlistBox.innerHTML = '<div style="text-align:center; color:red;">ไม่พบช่องรายการในไฟล์นี้</div>';
-      }
+        // สร้างปุ่มเลือกช่องภายใน Sidebar ลิสต์แนวตั้ง
+        const channelList = document.getElementById("channel-list");
+        channels.forEach((channel, idx) => {
+            const div = document.createElement("div");
+            div.className = "channel";
+            div.tabIndex = idx + 1; // รองรับการกดปุ่มเลื่อนที่รีโมททีวี
+            
+            // ตรวจสอบโลโก้ ถ้าไม่มีให้สร้างกล่องเปล่าไว้กันพื้นที่เบี้ยว
+            const logoHtml = channel.logo 
+                ? `<img src="${channel.logo}" alt="${channel.name}">`
+                : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
+            
+            div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
+            
+            // คลิกหรือกดเลือกช่อง
+            div.onclick = () => loadPlayer(channel, div);
+            div.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') loadPlayer(channel, div);
+            });
+            
+            channelList.appendChild(div);
+        });
 
-    } catch (err) {
-      console.error(err);
-      playlistBox.innerHTML = '<div style="text-align:center; color:red;">เกิดข้อผิดพลาดในการดึง M3U</div>';
-    }
-  }
-
-  function getUrlExt(url) {
-    if (url.includes('.m3u8')) return 'HLS';
-    if (url.includes('.mpd')) return 'DASH';
-    if (url.includes('.ts')) return 'TS';
-    return 'STREAM';
-  }
-
-  document.addEventListener('DOMContentLoaded', initPlayer);
-</script>
-
+        // เล่นช่องแรกเป็น default เมื่อเปิดหน้าเว็บขึ้นมาครั้งแรก
+        if (channels.length > 0) {
+            const firstChannelEl = channelList.querySelector('.channel');
+            loadPlayer(channels[0], firstChannelEl);
+        }
+    </script>
 </body>
 </html>
