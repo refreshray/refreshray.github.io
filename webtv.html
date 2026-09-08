@@ -31,6 +31,7 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            overflow: hidden;
         }
         #player {
             width: 100% !important;
@@ -145,6 +146,25 @@
             font-weight: bold;
         }
 
+        /* 🔍 CSS ครอบสำหรับการขยายภาพช่องประเภท Iframe */
+        .iframe-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #000;
+        }
+        .iframe-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* ปรับอัตราขยาย Scale ขึ้น เพื่อขยายตัววิดีโอกลางจอให้เต็มกรอบ */
+            transform: scale(1.45);
+            transform-origin: center center;
+        }
+
     </style>
 </head>
 <body>
@@ -210,27 +230,26 @@
                 name: "Trace Urban",
                 logo: "",
                 file: "https://jmp2.uk/stvp-ESBA3300043M0",
-                isIframe: true // 👈 เปิดใช้งานระบบ Iframe สำหรับลิงก์นี้
+                isIframe: true
             }
         ];
 
         function loadPlayer(channel, element) {
             const container = document.querySelector('.player-container');
 
-if (channel.isIframe) {
-    if (window.jwplayer && jwplayer("player").getState) {
-        jwplayer("player").remove();
-    }
-    // ใช้ CSS scale(1.5) เพื่อขยายวิดีโอข้างใน iframe ให้เต็มจอขึ้น (ปรับเลข 1.5 เพิ่ม/ลด ได้ตามต้องการ)
-    container.innerHTML = `
-        <div style="width:100%; height:100%; overflow:hidden; display:flex; justify-content:center; align-items:center;">
-            <iframe src="${channel.file}" 
-                    style="width:100%; height:100%; border:none; transform: scale(1.4); transform-origin: center center;" 
-                    allow="autoplay; encrypted-media" 
-                    allowfullscreen>
-            </iframe>
-        </div>`;
-}
+            if (channel.isIframe) {
+                // ถ้าสลับมาจาก JW Player ให้ทำลายตัวเล่นเดิมก่อน
+                if (window.jwplayer && jwplayer("player").getState) {
+                    jwplayer("player").remove();
+                }
+                // ดึงวิดีโอผ่าน Iframe และครอบด้วย Wrapper ขยาย Scale สเกลภาพให้ใหญ่ขึ้น
+                container.innerHTML = `
+                    <div class="iframe-wrapper">
+                        <iframe src="${channel.file}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>`;
+            } else {
+                // ถ้าเป็นสตรีมปกติ ให้คืนค่า div#player แล้วใช้ JW Player
+                container.innerHTML = `<div id="player"></div>`;
 
                 const config = {
                     file: channel.file,
@@ -255,7 +274,7 @@ if (channel.isIframe) {
                 jwplayer("player").setup(config);
             }
 
-            // จัดการไฮไลต์สีส้มค้างไว้ที่ช่องที่กำลังเล่น
+            // จัดการสีไฮไลต์ค้างที่ปุ่มช่องที่เลือกอยู่
             if (element) {
                 document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
@@ -283,7 +302,7 @@ if (channel.isIframe) {
             channelList.appendChild(div);
         });
 
-        // เปิดเล่นช่องแรกทันทีเมื่อโหลดหน้าเว็บ
+        // เปิดเล่นช่องแรกทันทีเมื่อเปิดหน้าเว็บ
         if (channels.length > 0) {
             const firstChannelEl = channelList.querySelector('.channel');
             loadPlayer(channels[0], firstChannelEl);
