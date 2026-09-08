@@ -78,7 +78,7 @@
             border-bottom: 1px solid #333;
         }
 
-        /* 📜 รายการกล่องช่องทีวี (เปลี่ยนเป็นแนวตั้ง) */
+        /* 📜 รายการกล่องช่องทีวี (แนวตั้ง) */
         #channel-list {
             flex-grow: 1;
             overflow-y: auto;
@@ -105,10 +105,10 @@
             border: 1px solid #444;
             border-radius: 8px;
             text-align: center;
-            width: 100%; /* เต็มความกว้างของเมนู */
+            width: 100%;
             min-height: 70px;
             display: flex;
-            justify-content: flex-start; /* จัดโลโก้และข้อความเรียงไปทางขวา */
+            justify-content: flex-start;
             align-items: center;
             transition: all 0.2s;
             overflow: hidden;
@@ -137,7 +137,7 @@
             outline: none;
         }
 
-        /* 🌟 CSS เพิ่มเติม: สถานะช่องที่กำลังเล่นอยู่ (Active State) */
+        /* 🌟 สถานะช่องที่กำลังเล่นอยู่ (Active State) */
         .channel.active {
             background: orange;
             color: black;
@@ -164,14 +164,8 @@
     </div>
 
     <script>
-        // รายการช่องของคุณ (สามารถนำลิสต์ทั้งหมดมาใส่ต่อตรงนี้ได้เลย)
+        // รายการช่อง
         const channels = [
-            {
-                name: "Trace Urban",
-                logo: "",
-                file: "https://jmp2.uk/stvp-ESBA3300043M0.m3u8",
-                drm: false
-            },
             {
                 name: "CARTOON NETWORK ",
                 logo: "",
@@ -203,7 +197,7 @@
                 keyId: "641c3f0e676d49d18c2082e093380e69",
                 key: "e06f3a2e327643249c3831ab199c4015",
                 drm: true
-            },      
+            },		
             {
                 name: "Food_Network",
                 logo: "",
@@ -211,6 +205,13 @@
                 keyId: "d4b9d55410d24905920e57664a047116",
                 key: "d821110f280f4545ae0227d5784af199",
                 drm: true
+            },
+            {
+                name: "Trace Urban",
+                logo: "",
+                file: "https://jmp2.uk/stvp-ESBA3300043M0",
+                type: "hls", // ระบุประเภทประเภทสื่อ HLS ให้ JW Player อ่านแม้ว่าจะไม่มี .m3u8 ใน URL
+                drm: false
             }
         ];
 
@@ -223,7 +224,12 @@
                 mute: false
             };
 
-            // ถ้าเป็นไฟล์ .mpd + drm
+            // กำหนดประเภทสตรีมตามฟิลด์ type (ถ้ามี)
+            if (channel.type) {
+                config.type = channel.type;
+            }
+
+            // ถ้าเป็นไฟล์ DRM
             if (channel.drm) {
                 config.type = "dash";
                 config.drm = {
@@ -232,37 +238,30 @@
                         key: channel.key
                     }
                 };
-            } else {
-                // ถ้าไฟล์ .m3u8 (HLS)
-                config.type = "hls";
             }
 
             jwplayer("player").setup(config);
 
-            // 🎯 จัดการไฮไลต์สีช่องที่กำลังเล่น
+            // ไฮไลต์สีส้มที่ปุ่มช่องที่เลือก
             if (element) {
-                // เอา class active ออกจากทุกช่องก่อน
                 document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
-                // เพิ่ม class active ให้กับช่องที่ถูกเลือก
                 element.classList.add('active');
             }
         }
 
-        // สร้างปุ่มเลือกช่องภายใน Sidebar ลิสต์แนวตั้ง
+        // สร้างรายการปุ่มช่องทีวี
         const channelList = document.getElementById("channel-list");
         channels.forEach((channel, idx) => {
             const div = document.createElement("div");
             div.className = "channel";
-            div.tabIndex = idx + 1; // รองรับการกดปุ่มเลื่อนที่รีโมททีวี
+            div.tabIndex = idx + 1;
             
-            // ตรวจสอบโลโก้ ถ้าไม่มีให้สร้างกล่องเปล่าไว้กันพื้นที่เบี้ยว
             const logoHtml = channel.logo 
                 ? `<img src="${channel.logo}" alt="${channel.name}">`
                 : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
             
             div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
             
-            // คลิกหรือกดเลือกช่อง
             div.onclick = () => loadPlayer(channel, div);
             div.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') loadPlayer(channel, div);
@@ -271,7 +270,7 @@
             channelList.appendChild(div);
         });
 
-        // เล่นช่องแรกเป็น default เมื่อเปิดหน้าเว็บขึ้นมาครั้งแรก
+        // เล่นช่องแรกทันทีเมื่อเปิดหน้าเว็บ
         if (channels.length > 0) {
             const firstChannelEl = channelList.querySelector('.channel');
             loadPlayer(channels[0], firstChannelEl);
