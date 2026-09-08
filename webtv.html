@@ -158,7 +158,7 @@
         <div id="channel-list"></div>
     </nav>
 
-    <!-- เครื่องเล่นวิดีโอเต็มจอ -->
+    <!-- เครื่องเล่นวิดีโอ/คอนเทนต์เต็มจอ -->
     <div class="player-container">
         <div id="player"></div>
     </div>
@@ -210,39 +210,47 @@
                 name: "Trace Urban",
                 logo: "",
                 file: "https://jmp2.uk/stvp-ESBA3300043M0",
-                type: "hls", // ระบุประเภทประเภทสื่อ HLS ให้ JW Player อ่านแม้ว่าจะไม่มี .m3u8 ใน URL
-                drm: false
+                isIframe: true // 👈 เปิดใช้งานระบบ Iframe สำหรับลิงก์นี้
             }
         ];
 
         function loadPlayer(channel, element) {
-            const config = {
-                file: channel.file,
-                width: "100%",
-                height: "100%",
-                autostart: true,
-                mute: false
-            };
+            const container = document.querySelector('.player-container');
 
-            // กำหนดประเภทสตรีมตามฟิลด์ type (ถ้ามี)
-            if (channel.type) {
-                config.type = channel.type;
-            }
+            if (channel.isIframe) {
+                // ถ้าเป็นช่องแบบ Iframe ให้สลับ Container เป็น <iframe>
+                if (window.jwplayer && jwplayer("player").getState) {
+                    jwplayer("player").remove(); // ทำลายอินสแตนซ์ของ JW Player เดิม
+                }
+                container.innerHTML = `<iframe src="${channel.file}" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+            } else {
+                // ถ้าเป็นช่องสตรีมปกติ ให้สร้าง div#player ขึ้นมาใหม่แล้วโหลด JW Player
+                container.innerHTML = `<div id="player"></div>`;
 
-            // ถ้าเป็นไฟล์ DRM
-            if (channel.drm) {
-                config.type = "dash";
-                config.drm = {
-                    clearkey: {
-                        keyId: channel.keyId,
-                        key: channel.key
-                    }
+                const config = {
+                    file: channel.file,
+                    width: "100%",
+                    height: "100%",
+                    autostart: true,
+                    mute: false
                 };
+
+                if (channel.drm) {
+                    config.type = "dash";
+                    config.drm = {
+                        clearkey: {
+                            keyId: channel.keyId,
+                            key: channel.key
+                        }
+                    };
+                } else {
+                    config.type = "hls";
+                }
+
+                jwplayer("player").setup(config);
             }
 
-            jwplayer("player").setup(config);
-
-            // ไฮไลต์สีส้มที่ปุ่มช่องที่เลือก
+            // จัดการไฮไลต์สีส้มค้างไว้ที่ช่องที่กำลังเล่น
             if (element) {
                 document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
                 element.classList.add('active');
@@ -270,7 +278,7 @@
             channelList.appendChild(div);
         });
 
-        // เล่นช่องแรกทันทีเมื่อเปิดหน้าเว็บ
+        // เปิดเล่นช่องแรกทันทีเมื่อโหลดหน้าเว็บ
         if (channels.length > 0) {
             const firstChannelEl = channelList.querySelector('.channel');
             loadPlayer(channels[0], firstChannelEl);
