@@ -217,15 +217,20 @@
         function loadPlayer(channel, element) {
             const container = document.querySelector('.player-container');
 
-            if (channel.isIframe) {
-                // ถ้าเป็นช่องแบบ Iframe ให้สลับ Container เป็น <iframe>
-                if (window.jwplayer && jwplayer("player").getState) {
-                    jwplayer("player").remove(); // ทำลายอินสแตนซ์ของ JW Player เดิม
-                }
-                container.innerHTML = `<iframe src="${channel.file}" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-            } else {
-                // ถ้าเป็นช่องสตรีมปกติ ให้สร้าง div#player ขึ้นมาใหม่แล้วโหลด JW Player
-                container.innerHTML = `<div id="player"></div>`;
+if (channel.isIframe) {
+    if (window.jwplayer && jwplayer("player").getState) {
+        jwplayer("player").remove();
+    }
+    // ใช้ CSS scale(1.5) เพื่อขยายวิดีโอข้างใน iframe ให้เต็มจอขึ้น (ปรับเลข 1.5 เพิ่ม/ลด ได้ตามต้องการ)
+    container.innerHTML = `
+        <div style="width:100%; height:100%; overflow:hidden; display:flex; justify-content:center; align-items:center;">
+            <iframe src="${channel.file}" 
+                    style="width:100%; height:100%; border:none; transform: scale(1.4); transform-origin: center center;" 
+                    allow="autoplay; encrypted-media" 
+                    allowfullscreen>
+            </iframe>
+        </div>`;
+}
 
                 const config = {
                     file: channel.file,
