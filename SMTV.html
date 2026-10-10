@@ -2,11 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Samsung Tizen TV IPTV Test</title>
-    
-    <!-- โหลด Video.js CSS -->
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-
+    <title>Samsung Tizen TV IPTV Test (HLS.js)</title>
     <style>
         body {
             margin: 0;
@@ -19,25 +15,25 @@
             height: 100vh;
         }
 
-        #my-video {
+        #videoPlayer {
             width: 100%;
             height: 100%;
             position: absolute;
             top: 0;
             left: 0;
+            background-color: #000;
         }
 
-        /* กล่อง Log มุมขวาบน ให้มองเห็นชัดเจน */
         #logBox {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 450px;
+            width: 480px;
             max-height: 300px;
             background: rgba(0, 0, 0, 0.9);
             border: 2px solid #00ffcc;
             padding: 15px;
-            font-size: 14px;
+            font-size: 13px;
             font-family: monospace;
             overflow-y: auto;
             z-index: 9999;
@@ -45,7 +41,6 @@
             color: #00ffcc;
         }
 
-        /* ป้ายแสดงชื่อช่องด้านล่างซ้าย */
         #infoBox {
             position: absolute;
             bottom: 30px;
@@ -62,28 +57,19 @@
 </head>
 <body>
 
-    <!-- Video.js Player Element -->
-    <video
-        id="my-video"
-        class="video-js vjs-big-play-centered"
-        controls
-        preload="auto"
-        autoplay
-        playsinline
-    ></video>
+    <!-- ใช้ Video Element ธรรมดา ควบคุมด้วย Hls.js -->
+    <video id="videoPlayer" controls autoplay playsinline></video>
 
-    <!-- Log Panel -->
     <div id="logBox"><b>System Logs:</b><br></div>
-
-    <!-- Info Box -->
     <div id="infoBox">กำลังเตรียมระบบ...</div>
 
-    <!-- โหลด Video.js JavaScript Library -->
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <!-- โหลด Hls.js เวอร์ชันล่าสุด -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <script>
         const logBox = document.getElementById('logBox');
         const infoBox = document.getElementById('infoBox');
+        const video = document.getElementById('videoPlayer');
 
         function log(msg) {
             console.log(msg);
@@ -91,9 +77,8 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        log("Script started successfully.");
+        log("App started with Hls.js");
 
-        // รายการช่อง
         const playlist = [
             {
                 name: "MAX 1 (ดูสดฟุตบอลลีก)",
@@ -106,84 +91,88 @@
         ];
 
         let currentIndex = 0;
-        let player = null;
-
-        // รอให้หน้าเว็บโหลดสมบูรณ์ก่อนสร้าง Player
-        window.addEventListener('DOMContentLoaded', (event) => {
-            try {
-                log("Initializing Video.js player...");
-                player = videojs('my-video', {
-                    fluid: false,
-                    responsive: true,
-                    autoplay: true
-                });
-
-                player.ready(function() {
-                    log("Player is ready.");
-                    loadChannel(0);
-                });
-
-                player.on('error', function() {
-                    const err = player.error();
-                    log("Player Error: " + (err ? err.message : "Unknown") + " (code: " + (err ? err.code : "?") + ")");
-                });
-
-            } catch (e) {
-                log("Init Exception: " + e.message);
-            }
-        });
+        let hls = null;
 
         function loadChannel(index) {
-            try {
-                currentIndex = index;
-                const channel = playlist[currentIndex];
-                
-                infoBox.innerText = `ช่อง: ${channel.name} [ซ้าย/ขวา เปลี่ยนช่อง]`;
-                log(`Loading channel: ${channel.name}`);
-                log(`URL: ${channel.url}`);
+            currentIndex = index;
+            const channel = playlist[currentIndex];
+            
+            infoBox.innerText = `ช่อง: ${channel.name} [ซ้าย/ขวา เปลี่ยนช่อง]`;
+            log(`Loading: ${channel.name}`);
 
-                player.src({
-                    src: channel.url,
-                    type: 'application/x-mpegURL'
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    // ตั้งค่าเผื่อกรณีสตรีมต้องการ User-Agent หรือข้ามข้อจำกัดบางส่วน
+                    xhrSetup: function (xhr, url) {
+                        xhr.withCredentials = false; // ป้องกันปัญหา CORS ปลายทาง
+                    }
                 });
 
-                player.play().catch(e => {
-                    log("Play blocked/error: " + e.message);
+                hls.loadSource(channel.url);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    log("Manifest parsed successfully, playing...");
+                    video.play().catch(e => log("Play blocked: " + e.message));
                 });
-            } catch (e) {
-                log("LoadChannel Exception: " + e.message);
+
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    log(`HLS Error: ${data.type} - ${data.details}`);
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                log("Fatal network error encountered, trying to recover...");
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                log("Fatal media error encountered, trying to recover...");
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                log("Unrecoverable error, stopping player.");
+                                hls.destroy();
+                                break;
+                        }
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                log("Using native HLS support.");
+                video.src = channel.url;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            } else {
+                log("Error: Browser does not support HLS.");
             }
         }
 
         // ควบคุมผ่านรีโมท / คีย์บอร์ด
         window.addEventListener('keydown', function(e) {
-            log("Key pressed code: " + e.keyCode);
-            
+            log("Key code: " + e.keyCode);
             switch(e.keyCode) {
                 case 13: // Enter / OK
-                    if (player.paused()) {
-                        player.play();
-                    } else {
-                        player.pause();
-                    }
+                    if (video.paused) { video.play(); } else { video.pause(); }
                     break;
                 case 37: // LEFT arrow (ช่องก่อนหน้า)
-                    let prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-                    loadChannel(prevIndex);
+                    loadChannel((currentIndex - 1 + playlist.length) % playlist.length);
                     break;
                 case 39: // RIGHT arrow (ช่องถัดไป)
-                    let nextIndex = (currentIndex + 1) % playlist.length;
-                    loadChannel(nextIndex);
+                    loadChannel((currentIndex + 1) % playlist.length);
                     break;
-                case 10009: // Return / Back บน Samsung TV
-                    try {
-                        tizen.application.getCurrentApplication().exit();
-                    } catch (err) {
-                        window.history.back();
-                    }
+                case 10009: // Return / Back บน Tizen TV
+                    try { tizen.application.getCurrentApplication().exit(); } catch (err) { window.history.back(); }
                     break;
             }
         });
+
+        window.onload = function() {
+            loadChannel(0);
+        };
     </script>
 </body>
 </html>
