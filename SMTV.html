@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Samsung Tizen TV Video.js Test</title>
+    <title>Samsung Tizen TV IPTV Test</title>
     
     <!-- โหลด Video.js CSS -->
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
@@ -11,26 +11,15 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #0b0b0b;
+            background-color: #000000;
             color: #ffffff;
             font-family: Arial, sans-serif;
             overflow: hidden;
-            width: 1920px;
-            height: 1080px;
+            width: 100vw;
+            height: 100vh;
         }
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        /* ปรับแต่งขนาด Video.js ให้เต็มจอทีวี */
-        .video-js {
+        #my-video {
             width: 100%;
             height: 100%;
             position: absolute;
@@ -38,126 +27,63 @@
             left: 0;
         }
 
-        .ui-overlay {
-            position: absolute;
-            bottom: 40px;
-            left: 60px;
-            right: 60px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px 30px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            border: 2px solid #444;
-        }
-
-        .channel-info {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffcc00;
-        }
-
-        .url-box {
-            font-size: 18px;
-            color: #4da6ff;
-            word-break: break-all;
-        }
-
-        .controls {
-            display: flex;
-            gap: 20px;
-            font-size: 16px;
-            align-items: center;
-        }
-
-        .btn {
-            background: #333;
-            color: white;
-            padding: 6px 15px;
-            border-radius: 6px;
-            border: 2px solid transparent;
-        }
-
-        .btn.active {
-            background: #0073e6;
-            border-color: #ffffff;
-        }
-
+        /* กล่อง Log มุมขวาบน ให้มองเห็นชัดเจน */
         #logBox {
             position: absolute;
-            top: 30px;
-            right: 30px;
-            width: 500px;
-            max-height: 250px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid #444;
+            top: 20px;
+            right: 20px;
+            width: 450px;
+            max-height: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ffcc;
             padding: 15px;
             font-size: 14px;
             font-family: monospace;
             overflow-y: auto;
-            z-index: 200;
+            z-index: 9999;
             border-radius: 8px;
             color: #00ffcc;
+        }
+
+        /* ป้ายแสดงชื่อช่องด้านล่างซ้าย */
+        #infoBox {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            padding: 15px 25px;
+            z-index: 9999;
+            border-radius: 8px;
+            font-size: 20px;
+            color: #ffcc00;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Video.js Player Element -->
-        <video
-            id="my-video"
-            class="video-js vjs-big-play-centered"
-            controls
-            preload="auto"
-            autoplay
-            playsinline
-        >
-            <source src="" type="application/x-mpegURL" />
-            <p class="vjs-no-js">
-                To view this video please enable JavaScript, and consider upgrading to a
-                web browser that
-                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-            </p>
-        </video>
+    <!-- Video.js Player Element -->
+    <video
+        id="my-video"
+        class="video-js vjs-big-play-centered"
+        controls
+        preload="auto"
+        autoplay
+        playsinline
+    ></video>
 
-        <!-- Log Panel สำหรับดูสถานะบนจอ TV -->
-        <div id="logBox">Logs:<br></div>
+    <!-- Log Panel -->
+    <div id="logBox"><b>System Logs:</b><br></div>
 
-        <!-- UI แสดงข้อมูลช่องและลิงก์ -->
-        <div class="ui-overlay" id="uiOverlay">
-            <div class="channel-info" id="channelTitle">Channel: MAX 1</div>
-            <div class="url-box" id="urlDisplay">Link: กำลังโหลด...</div>
-            <div class="controls">
-                <span class="btn active" id="statusBtn">Status: Playing</span>
-                <span style="color: #aaa;">[รีโมท: ซ้าย/ขวา = เปลี่ยนช่อง, OK = เล่น/พัก, Return = ออกจากแอป]</span>
-            </div>
-        </div>
-    </div>
+    <!-- Info Box -->
+    <div id="infoBox">กำลังเตรียมระบบ...</div>
 
     <!-- โหลด Video.js JavaScript Library -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
     <script>
-        // รายการช่องจากข้อมูลที่คุณให้มา
-        const playlist = [
-            {
-                name: "MAX 1 (ดูสดฟุตบอลลีก)",
-                url: "https://api.plus-server.sbs/play.php?key=1234&id=1776175&server=ecdn&source=bontv"[cite: 1]
-            },
-            {
-                name: "MAX 2 (ดูสดฟุตบอลลีก)",
-                url: "https://api.plus-server.sbs/play.php?key=1234&id=1776176&server=ecdn&source=bontv"[cite: 1]
-            }
-        ];
-
-        let currentIndex = 0;
         const logBox = document.getElementById('logBox');
-        const urlDisplay = document.getElementById('urlDisplay');
-        const channelTitle = document.getElementById('channelTitle');
-        const statusBtn = document.getElementById('statusBtn');
+        const infoBox = document.getElementById('infoBox');
 
         function log(msg) {
             console.log(msg);
@@ -165,56 +91,76 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // เริ่มต้นใช้งาน Video.js
-        const player = videojs('my-video', {
-            fluid: false,
-            responsive: true,
-            autoplay: true
+        log("Script started successfully.");
+
+        // รายการช่อง
+        const playlist = [
+            {
+                name: "MAX 1 (ดูสดฟุตบอลลีก)",
+                url: "https://api.plus-server.sbs/play.php?key=1234&id=1776175&server=ecdn&source=bontv"
+            },
+            {
+                name: "MAX 2 (ดูสดฟุตบอลลีก)",
+                url: "https://api.plus-server.sbs/play.php?key=1234&id=1776176&server=ecdn&source=bontv"
+            }
+        ];
+
+        let currentIndex = 0;
+        let player = null;
+
+        // รอให้หน้าเว็บโหลดสมบูรณ์ก่อนสร้าง Player
+        window.addEventListener('DOMContentLoaded', (event) => {
+            try {
+                log("Initializing Video.js player...");
+                player = videojs('my-video', {
+                    fluid: false,
+                    responsive: true,
+                    autoplay: true
+                });
+
+                player.ready(function() {
+                    log("Player is ready.");
+                    loadChannel(0);
+                });
+
+                player.on('error', function() {
+                    const err = player.error();
+                    log("Player Error: " + (err ? err.message : "Unknown") + " (code: " + (err ? err.code : "?") + ")");
+                });
+
+            } catch (e) {
+                log("Init Exception: " + e.message);
+            }
         });
 
         function loadChannel(index) {
-            currentIndex = index;
-            const channel = playlist[currentIndex];
-            
-            channelTitle.innerText = `Channel: ${channel.name}`;
-            urlDisplay.innerText = `Link: ${channel.url}`;
-            log(`Loading: ${channel.name}`);
+            try {
+                currentIndex = index;
+                const channel = playlist[currentIndex];
+                
+                infoBox.innerText = `ช่อง: ${channel.name} [ซ้าย/ขวา เปลี่ยนช่อง]`;
+                log(`Loading channel: ${channel.name}`);
+                log(`URL: ${channel.url}`);
 
-            // กำหนด Source ให้ Video.js และสั่ง Play
-            player.src({
-                src: channel.url,
-                type: 'application/x-mpegURL' // กำหนดประเภทสตรีมเป็น HLS
-            });
-
-            player.ready(function() {
-                player.play().catch(e => {
-                    log("Auto-play blocked/error: " + e.message);
+                player.src({
+                    src: channel.url,
+                    type: 'application/x-mpegURL'
                 });
-            });
+
+                player.play().catch(e => {
+                    log("Play blocked/error: " + e.message);
+                });
+            } catch (e) {
+                log("LoadChannel Exception: " + e.message);
+            }
         }
 
-        // Video.js Event Listeners
-        player.on('playing', () => {
-            statusBtn.innerText = "Status: Playing";
-            log("Player is playing");
-        });
-
-        player.on('pause', () => {
-            statusBtn.innerText = "Status: Paused";
-            log("Player paused");
-        });
-
-        player.on('error', () => {
-            const err = player.error();
-            log("Video.js Error: " + (err ? err.message : "Unknown error") + (err ? " (code: " + err.code + ")" : ""));
-        });
-
-        // ควบคุมผ่านรีโมทคอนโทรล Samsung Tizen TV
+        // ควบคุมผ่านรีโมท / คีย์บอร์ด
         window.addEventListener('keydown', function(e) {
-            log("Key code: " + e.keyCode);
+            log("Key pressed code: " + e.keyCode);
             
             switch(e.keyCode) {
-                case 13: // Enter / OK button (Play/Pause)
+                case 13: // Enter / OK
                     if (player.paused()) {
                         player.play();
                     } else {
@@ -229,14 +175,7 @@
                     let nextIndex = (currentIndex + 1) % playlist.length;
                     loadChannel(nextIndex);
                     break;
-                case 415: // MediaPlay
-                    player.play();
-                    break;
-                case 19: // MediaPause
-                case 413: // MediaStop
-                    player.pause();
-                    break;
-                case 10009: // Return / Back button บนรีโมท Samsung TV
+                case 10009: // Return / Back บน Samsung TV
                     try {
                         tizen.application.getCurrentApplication().exit();
                     } catch (err) {
@@ -245,11 +184,6 @@
                     break;
             }
         });
-
-        // โหลดช่องแรกเมื่อหน้าเว็บพร้อม
-        window.onload = function() {
-            loadChannel(0);
-        };
     </script>
 </body>
 </html>
