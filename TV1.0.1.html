@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal IPTV Web Player</title>
+    
+    <!-- 1. โหลด Stylesheet และ Engine ภายนอกผ่าน CDN -->
+    <!-- Artplayer UI CSS -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background-color: #1e1e1e;
+            color: #fff;
+            font-size: 14px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #player-container {
+            width: 100%;
+            height: 500px;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .status-badge {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #aaa;
+        }
+    </style>
+
+    <!-- Artplayer JS -->
+    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+    <!-- Hls.js สำหรับ .m3u8 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- mpegts.js สำหรับ .ts / Live Stream -->
+    <script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.js"></script>
+    <!-- Shaka Player สำหรับ .mpd (DASH) -->
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.5/dist/shaka-player.compiled.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Universal IPTV Player</h2>
+        <div class="input-group">
+            <input type="text" id="streamUrl" placeholder="วางลิงก์ IPTV ที่นี่ (.m3u8, .ts, .mpd, .mp4)...">
+            <button onclick="loadStream()">เล่นสตรีม</button>
+        </div>
+        
+        <!-- พื้นที่แสดงผล Player -->
+        <div id="player-container"></div>
+        <div class="status-badge" id="statusText">สถานะ: พร้อมใช้งาน</div>
+    </div>
+
+    <script>
+        let art = null;
+        let activeEngine = null;
+
+        // ฟังก์ชันทำลาย Player และ Engine เดิมก่อนสร้างใหม่
+        function destroyPlayer() {
+            if (activeEngine) {
+                if (typeof activeEngine.destroy === 'function') {
+                    activeEngine.destroy();
+                }
+                activeEngine = null;
+            }
+            if (art) {
+                art.destroy(false);
+                art = null;
+            }
+        }
+
+        function loadStream() {
+            const url = document.getElementById('streamUrl').value.trim();
+            const statusText = document.getElementById('statusText');
+            
+            if (!url) {
+                alert('กรุณากรอกลิงก์สตรีมก่อนครับ');
+                return;
+            }
+
+            destroyPlayer();
+            statusText.innerText = 'สถานะ: กำลังโหลดสตรีม...';
+
+            // สร้าง Artplayer หลัก
+            art = new Artplayer({
+                container: '#player-container',
+                url: url,
+                volume: 0.7,
+                autoplay: true,
+                isLive: true,
+                muted: false,
+                fullscreen: true,
+                setting: true,
+                playbackRate: true,
+                aspectRatio: true,
+                customType: {
+                    // 1. จัดการไฟล์ .m3u8 (HLS)
+                    m3u8: function (video, url, art) {
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(url);
+                            hls.attachMedia(video);
+                            activeEngine = hls;
+                            
+                            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Hls.js (.m3u8)';
+                                art.play();
+                            });
+                            hls.on(Hls.Events.ERROR, (event, data) => {
+                                if (data.fatal) {
+                                    statusText.innerText = 'สถานะ: เกิดข้อผิดพลาดในการโหลด HLS';
+                                }
+                            });
+                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                            video.src = url;
+                            statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Native HLS (Safari)';
+                        } else {
+                            statusText.innerText = 'สถานะ: เบราว์เซอร์นี้ไม่รองรับ HLS';
+                        }
+                    },
+
+                    // 2. จัดการไฟล์ .ts หรือ MPEG-TS Live Stream
+                    ts: function (video, url, art) {
+                        if (mpegts.isSupported()) {
+                            const player = mpegts.createPlayer({
+                                type: 'mse',
+                                isLive: true,
+                                url: url,
+                            }, {
+                                enableWorker: true,
+                                lowLatencyMode: true,
+                            });
+                            
+                            player.attachMediaElement(video);
+                            player.load();
+                            activeEngine = player;
+                            
+                            statusText.innerText = 'สถานะ: กำลังเล่นผ่าน mpegts.js (.ts)';
+                            player.play().catch(() => {});
+                        } else {
+                            statusText.innerText = 'สถานะ: เบราว์เซอร์นี้ไม่รองรับ MPEG-TS MSE';
+                        }
+                    },
+
+                    // 3. จัดการไฟล์ .mpd (DASH)
+                    mpd: function (video, url, art) {
+                        shaka.polyfill.installAll();
+                        if (shaka.Player.isBrowserSupported()) {
+                            const player = new shaka.Player(video);
+                            activeEngine = player;
+                            
+                            player.load(url).then(() => {
+                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Shaka Player (.mpd)';
+                            }).catch((error) => {
+                                statusText.innerText = 'สถานะ: โหลด DASH ไม่สำเร็จ: ' + error.message;
+                            });
+                        } else {
+                            statusText.innerText = 'สถานะ: เบราว์เซอร์นี้ไม่รองรับ Shaka Player';
+                        }
+                    }
+                }
+            });
+
+            // ดักจับกรณีเป็นไฟล์ธรรมดา เช่น .mp4
+            art.on('ready', () => {
+                if (!activeEngine) {
+                    statusText.innerText = 'สถานะ: กำลังเล่นผ่าน HTML5 Native';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
