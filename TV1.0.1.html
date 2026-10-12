@@ -1,233 +1,78 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.0Universal IPTV Web Player with ClearKey DRM</title>
-    
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 900px;
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .row {
-            display: flex;
-            gap: 10px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #333;
-            background-color: #1e1e1e;
-            color: #fff;
-            font-size: 14px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #player-container {
-            width: 100%;
-            height: 500px;
-            background-color: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        .status-badge {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #aaa;
-        }
-    </style>
+<script>
+    let art = null;
+    let activeEngine = null;
 
-    <!-- Artplayer JS -->
-    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
-    <!-- Hls.js สำหรับ .m3u8 -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <!-- mpegts.js สำหรับ .ts -->
-    <script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.js"></script>
-    <!-- Shaka Player สำหรับ .mpd และ ClearKey DRM -->
-    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.12.3/dist/shaka-player.compiled.js"></script>
-</head>
-<body>
+    shaka.polyfill.installAll();
 
-    <div class="container">
-        <h2>Universal IPTV Player + ClearKey DRM</h2>
-        <div class="input-group">
-            <input type="text" id="streamUrl" placeholder="วางลิงก์สตรีม (.mpd, .m3u8, .ts)..." value="https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/109/109.mpd">
-            <div class="row">
-                <input type="text" id="drmKeyId" placeholder="ClearKey Key ID" value="072eeb02f6744f838fcc8f0ef36b312e">
-                <input type="text" id="drmKey" placeholder="ClearKey Key" value="b797c12f2dd64728aae23fd3c8ef275c">
-            </div>
-            <div class="row">
-                <input type="text" id="drmLicenseUrl" placeholder="Widevine License Server URL (ถ้ามี)">
-                <button onclick="loadStream()">เล่นสตรีม</button>
-            </div>
-        </div>
+    function destroyPlayer() {
+        if (activeEngine) {
+            if (typeof activeEngine.destroy === 'function') {
+                activeEngine.destroy();
+            }
+            activeEngine = null;
+        }
+        if (art) {
+            art.destroy(false);
+            art = null;
+        }
+    }
+
+    async function loadStream() {
+        const url = document.getElementById('streamUrl').value.trim();
+        const keyId = document.getElementById('drmKeyId').value.trim();
+        const key = document.getElementById('drmKey').value.trim();
+        const licenseUrl = document.getElementById('drmLicenseUrl').value.trim();
+        const statusText = document.getElementById('statusText');
         
-        <div id="player-container"></div>
-        <div class="status-badge" id="statusText">สถานะ: พร้อมใช้งาน</div>
-    </div>
+        if (!url) {
+            alert('กรุณากรอกลิงก์สตรีมก่อนครับ');
+            return;
+        }
 
-    <script>
-        let art = null;
-        let activeEngine = null;
+        destroyPlayer();
+        statusText.innerText = 'สถานะ: กำลังโหลดสตรีมผ่าน Shaka Player...';
 
-        // ติดตั้ง Shaka Polyfills ไว้ล่วงหน้า
-        shaka.polyfill.installAll();
+        art = new Artplayer({
+            container: '#player-container',
+            url: url,
+            volume: 0.7,
+            autoplay: true,
+            isLive: true,
+            fullscreen: true,
+            setting: true,
+            customType: {
+                shaka: async function (video, streamUrl, art) {
+                    const player = new shaka.Player(video);
+                    activeEngine = player;
 
-        function destroyPlayer() {
-            if (activeEngine) {
-                if (typeof activeEngine.destroy === 'function') {
-                    activeEngine.destroy();
+                    // ตั้งค่า ClearKey DRM
+                    if (keyId && key) {
+                        player.configure({
+                            drm: {
+                                clearKeys: {
+                                    [keyId.trim()]: key.trim()
+                                }
+                            }
+                        });
+                    }
+
+                    player.addEventListener('error', (event) => {
+                        console.error('Shaka Error:', event.detail);
+                        statusText.innerText = 'สถานะ DRM Error: ' + (event.detail ? event.detail.message : 'Unknown error');
+                    });
+
+                    try {
+                        await player.load(streamUrl);
+                        statusText.innerText = 'สถานะ: กำลังเล่นสตรีมสำเร็จ';
+                        art.play();
+                    } catch (error) {
+                        console.error('Load Error:', error);
+                        statusText.innerText = 'สถานะ: โหลดไม่สำเร็จ (อาจติด CORS หรือ Network Error)';
+                    }
                 }
-                activeEngine = null;
             }
-            if (art) {
-                art.destroy(false);
-                art = null;
-            }
-        }
+        });
 
-        async function loadStream() {
-            const url = document.getElementById('streamUrl').value.trim();
-            const keyId = document.getElementById('drmKeyId').value.trim();
-            const key = document.getElementById('drmKey').value.trim();
-            const licenseUrl = document.getElementById('drmLicenseUrl').value.trim();
-            const statusText = document.getElementById('statusText');
-            
-            if (!url) {
-                alert('กรุณากรอกลิงก์สตรีมก่อนครับ');
-                return;
-            }
-
-            destroyPlayer();
-            statusText.innerText = 'สถานะ: กำลังตรวจสอบและเตรียมระบบ DRM...';
-
-            // บังคับใช้ Shaka หากมีข้อมูล DRM หรือเป็นไฟล์ .mpd
-            const forceShaka = (keyId && key) || licenseUrl || url.endsWith('.mpd');
-
-            if (forceShaka && shaka.Player.isBrowserSupported()) {
-                art = new Artplayer({
-                    container: '#player-container',
-                    url: url,
-                    volume: 0.7,
-                    autoplay: true,
-                    isLive: true,
-                    fullscreen: true,
-                    setting: true,
-                    customType: {
-                        shaka: async function (video, streamUrl, art) {
-                            const player = new shaka.Player(video);
-                            activeEngine = player;
-
-                            // ตั้งค่าคอนฟิก ClearKey หรือ License Server อย่างแม่นยำ
-                            if (keyId && key) {
-                                player.configure({
-                                    drm: {
-                                        clearKeys: {
-                                            [keyId]: key
-                                        }
-                                    }
-                                });
-                            } else if (licenseUrl) {
-                                player.configure({
-                                    drm: {
-                                        servers: {
-                                            'com.widevine.alpha': licenseUrl,
-                                            'com.apple.fps': licenseUrl
-                                        }
-                                    }
-                                });
-                            }
-
-                            player.addEventListener('error', (event) => {
-                                statusText.innerText = 'สถานะ DRM Error: ' + (event.detail ? event.detail.message : 'Unknown error');
-                            });
-
-                            try {
-                                await player.load(streamUrl);
-                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Shaka Player (รองรับ ClearKey DRM สำเร็จ)';
-                                art.play();
-                            } catch (error) {
-                                statusText.innerText = 'สถานะ: โหลดสตรีมติด DRM ไม่สำเร็จ: ' + error.message;
-                            }
-                        }
-                    }
-                });
-
-                art.switchUrl(url, 'shaka');
-
-            } else {
-                // สำหรับลิงก์ทั่วไป (.m3u8, .ts) ใช้ Engine ปกติ
-                art = new Artplayer({
-                    container: '#player-container',
-                    url: url,
-                    volume: 0.7,
-                    autoplay: true,
-                    isLive: true,
-                    fullscreen: true,
-                    setting: true,
-                    customType: {
-                        m3u8: function (video, url) {
-                            if (Hls.isSupported()) {
-                                const hls = new Hls();
-                                hls.loadSource(url);
-                                hls.attachMedia(video);
-                                activeEngine = hls;
-                                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                                    statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Hls.js (.m3u8)';
-                                    art.play();
-                                });
-                            }
-                        },
-                        ts: function (video, url) {
-                            if (mpegts.isSupported()) {
-                                const player = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
-                                player.attachMediaElement(video);
-                                player.load();
-                                activeEngine = player;
-                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน mpegts.js (.ts)';
-                                player.play().catch(() => {});
-                            }
-                        }
-                    }
-                });
-
-                art.on('ready', () => {
-                    if (!activeEngine) {
-                        statusText.innerText = 'สถานะ: กำลังเล่นผ่าน HTML5 Native';
-                    }
-                });
-            }
-        }
-    </script>
-</body>
-</html>
+        art.switchUrl(url, 'shaka');
+    }
+</script>
