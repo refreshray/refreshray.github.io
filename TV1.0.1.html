@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal IPTV Web Player with DRM</title>
+    <title>1.0Universal IPTV Web Player with ClearKey DRM</title>
     
     <style>
         body {
@@ -73,18 +73,18 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <!-- mpegts.js สำหรับ .ts -->
     <script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.js"></script>
-    <!-- Shaka Player สำหรับ .mpd / HLS + DRM (Widevine, ClearKey) -->
+    <!-- Shaka Player สำหรับ .mpd และ ClearKey DRM -->
     <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.12.3/dist/shaka-player.compiled.js"></script>
 </head>
 <body>
 
     <div class="container">
-        <h2>Universal IPTV Player + DRM Support</h2>
+        <h2>Universal IPTV Player + ClearKey DRM</h2>
         <div class="input-group">
-            <input type="text" id="streamUrl" placeholder="วางลิงก์สตรีม (.mpd, .m3u8, .ts)...">
+            <input type="text" id="streamUrl" placeholder="วางลิงก์สตรีม (.mpd, .m3u8, .ts)..." value="https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/109/109.mpd">
             <div class="row">
-                <input type="text" id="drmKeyId" placeholder="ClearKey Key ID (ถ้ามี)">
-                <input type="text" id="drmKey" placeholder="ClearKey Key (ถ้ามี)">
+                <input type="text" id="drmKeyId" placeholder="ClearKey Key ID" value="072eeb02f6744f838fcc8f0ef36b312e">
+                <input type="text" id="drmKey" placeholder="ClearKey Key" value="b797c12f2dd64728aae23fd3c8ef275c">
             </div>
             <div class="row">
                 <input type="text" id="drmLicenseUrl" placeholder="Widevine License Server URL (ถ้ามี)">
@@ -131,11 +131,10 @@
             destroyPlayer();
             statusText.innerText = 'สถานะ: กำลังตรวจสอบและเตรียมระบบ DRM...';
 
-            // ถ้ามีค่า DRM ตั้งต้น ให้บังคับใช้ Shaka Player ในการถอดรหัสทั้ง .mpd และ .m3u8
+            // บังคับใช้ Shaka หากมีข้อมูล DRM หรือเป็นไฟล์ .mpd
             const forceShaka = (keyId && key) || licenseUrl || url.endsWith('.mpd');
 
             if (forceShaka && shaka.Player.isBrowserSupported()) {
-                // สร้าง Artplayer เปล่าๆ แล้วผูก Shaka เข้าไปควบคุม `<video>`
                 art = new Artplayer({
                     container: '#player-container',
                     url: url,
@@ -149,9 +148,8 @@
                             const player = new shaka.Player(video);
                             activeEngine = player;
 
-                            // กำหนดค่าคอนฟิก DRM หากมีการกรอกข้อมูลเข้ามา
+                            // ตั้งค่าคอนฟิก ClearKey หรือ License Server อย่างแม่นยำ
                             if (keyId && key) {
-                                // ตั้งค่า ClearKey DRM
                                 player.configure({
                                     drm: {
                                         clearKeys: {
@@ -160,25 +158,23 @@
                                     }
                                 });
                             } else if (licenseUrl) {
-                                // ตั้งค่า Widevine / FairPlay License Server
                                 player.configure({
                                     drm: {
                                         servers: {
                                             'com.widevine.alpha': licenseUrl,
-                                            'com.apple.fps': licenseUrl // ถ้าเป็น Safari
+                                            'com.apple.fps': licenseUrl
                                         }
                                     }
                                 });
                             }
 
-                            // จัดการ Error ของ Shaka
                             player.addEventListener('error', (event) => {
-                                statusText.innerText = 'สถานะ DRM Error: ' + event.detail.message;
+                                statusText.innerText = 'สถานะ DRM Error: ' + (event.detail ? event.detail.message : 'Unknown error');
                             });
 
                             try {
                                 await player.load(streamUrl);
-                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Shaka Player (รองรับ DRM สำเร็จ)';
+                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Shaka Player (รองรับ ClearKey DRM สำเร็จ)';
                                 art.play();
                             } catch (error) {
                                 statusText.innerText = 'สถานะ: โหลดสตรีมติด DRM ไม่สำเร็จ: ' + error.message;
@@ -187,11 +183,10 @@
                     }
                 });
 
-                // สั่งรัน Custom Type 'shaka'
                 art.switchUrl(url, 'shaka');
 
             } else {
-                // หากไม่มี DRM ให้ใช้ระบบปกติ (Hls.js / mpegts.js / Native)
+                // สำหรับลิงก์ทั่วไป (.m3u8, .ts) ใช้ Engine ปกติ
                 art = new Artplayer({
                     container: '#player-container',
                     url: url,
