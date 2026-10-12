@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal IPTV Web Player</title>
+    <title>Universal IPTV Web Player with DRM</title>
     
-    <!-- 1. โหลด Stylesheet และ Engine ภายนอกผ่าน CDN -->
-    <!-- Artplayer UI CSS -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,12 +22,17 @@
         }
         .input-group {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 15px;
         }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
         input[type="text"] {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
             border: 1px solid #333;
             background-color: #1e1e1e;
@@ -37,7 +40,7 @@
             font-size: 14px;
         }
         button {
-            padding: 12px 20px;
+            padding: 10px 20px;
             border: none;
             border-radius: 6px;
             background-color: #007bff;
@@ -68,21 +71,27 @@
     <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
     <!-- Hls.js สำหรับ .m3u8 -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <!-- mpegts.js สำหรับ .ts / Live Stream -->
+    <!-- mpegts.js สำหรับ .ts -->
     <script src="https://cdn.jsdelivr.net/npm/mpegts.js@latest/dist/mpegts.js"></script>
-    <!-- Shaka Player สำหรับ .mpd (DASH) -->
-    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.3.5/dist/shaka-player.compiled.js"></script>
+    <!-- Shaka Player สำหรับ .mpd / HLS + DRM (Widevine, ClearKey) -->
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.12.3/dist/shaka-player.compiled.js"></script>
 </head>
 <body>
 
     <div class="container">
-        <h2>Universal IPTV Player</h2>
+        <h2>Universal IPTV Player + DRM Support</h2>
         <div class="input-group">
-            <input type="text" id="streamUrl" placeholder="วางลิงก์ IPTV ที่นี่ (.m3u8, .ts, .mpd, .mp4)...">
-            <button onclick="loadStream()">เล่นสตรีม</button>
+            <input type="text" id="streamUrl" placeholder="วางลิงก์สตรีม (.mpd, .m3u8, .ts)...">
+            <div class="row">
+                <input type="text" id="drmKeyId" placeholder="ClearKey Key ID (ถ้ามี)">
+                <input type="text" id="drmKey" placeholder="ClearKey Key (ถ้ามี)">
+            </div>
+            <div class="row">
+                <input type="text" id="drmLicenseUrl" placeholder="Widevine License Server URL (ถ้ามี)">
+                <button onclick="loadStream()">เล่นสตรีม</button>
+            </div>
         </div>
         
-        <!-- พื้นที่แสดงผล Player -->
         <div id="player-container"></div>
         <div class="status-badge" id="statusText">สถานะ: พร้อมใช้งาน</div>
     </div>
@@ -91,7 +100,9 @@
         let art = null;
         let activeEngine = null;
 
-        // ฟังก์ชันทำลาย Player และ Engine เดิมก่อนสร้างใหม่
+        // ติดตั้ง Shaka Polyfills ไว้ล่วงหน้า
+        shaka.polyfill.installAll();
+
         function destroyPlayer() {
             if (activeEngine) {
                 if (typeof activeEngine.destroy === 'function') {
@@ -105,8 +116,11 @@
             }
         }
 
-        function loadStream() {
+        async function loadStream() {
             const url = document.getElementById('streamUrl').value.trim();
+            const keyId = document.getElementById('drmKeyId').value.trim();
+            const key = document.getElementById('drmKey').value.trim();
+            const licenseUrl = document.getElementById('drmLicenseUrl').value.trim();
             const statusText = document.getElementById('statusText');
             
             if (!url) {
@@ -115,94 +129,109 @@
             }
 
             destroyPlayer();
-            statusText.innerText = 'สถานะ: กำลังโหลดสตรีม...';
+            statusText.innerText = 'สถานะ: กำลังตรวจสอบและเตรียมระบบ DRM...';
 
-            // สร้าง Artplayer หลัก
-            art = new Artplayer({
-                container: '#player-container',
-                url: url,
-                volume: 0.7,
-                autoplay: true,
-                isLive: true,
-                muted: false,
-                fullscreen: true,
-                setting: true,
-                playbackRate: true,
-                aspectRatio: true,
-                customType: {
-                    // 1. จัดการไฟล์ .m3u8 (HLS)
-                    m3u8: function (video, url, art) {
-                        if (Hls.isSupported()) {
-                            const hls = new Hls();
-                            hls.loadSource(url);
-                            hls.attachMedia(video);
-                            activeEngine = hls;
-                            
-                            hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Hls.js (.m3u8)';
-                                art.play();
-                            });
-                            hls.on(Hls.Events.ERROR, (event, data) => {
-                                if (data.fatal) {
-                                    statusText.innerText = 'สถานะ: เกิดข้อผิดพลาดในการโหลด HLS';
-                                }
-                            });
-                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                            video.src = url;
-                            statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Native HLS (Safari)';
-                        } else {
-                            statusText.innerText = 'สถานะ: เบราว์เซอร์นี้ไม่รองรับ HLS';
-                        }
-                    },
+            // ถ้ามีค่า DRM ตั้งต้น ให้บังคับใช้ Shaka Player ในการถอดรหัสทั้ง .mpd และ .m3u8
+            const forceShaka = (keyId && key) || licenseUrl || url.endsWith('.mpd');
 
-                    // 2. จัดการไฟล์ .ts หรือ MPEG-TS Live Stream
-                    ts: function (video, url, art) {
-                        if (mpegts.isSupported()) {
-                            const player = mpegts.createPlayer({
-                                type: 'mse',
-                                isLive: true,
-                                url: url,
-                            }, {
-                                enableWorker: true,
-                                lowLatencyMode: true,
-                            });
-                            
-                            player.attachMediaElement(video);
-                            player.load();
-                            activeEngine = player;
-                            
-                            statusText.innerText = 'สถานะ: กำลังเล่นผ่าน mpegts.js (.ts)';
-                            player.play().catch(() => {});
-                        } else {
-                            statusText.innerText = 'สถานะ: เบราว์เซอร์นี้ไม่รองรับ MPEG-TS MSE';
-                        }
-                    },
-
-                    // 3. จัดการไฟล์ .mpd (DASH)
-                    mpd: function (video, url, art) {
-                        shaka.polyfill.installAll();
-                        if (shaka.Player.isBrowserSupported()) {
+            if (forceShaka && shaka.Player.isBrowserSupported()) {
+                // สร้าง Artplayer เปล่าๆ แล้วผูก Shaka เข้าไปควบคุม `<video>`
+                art = new Artplayer({
+                    container: '#player-container',
+                    url: url,
+                    volume: 0.7,
+                    autoplay: true,
+                    isLive: true,
+                    fullscreen: true,
+                    setting: true,
+                    customType: {
+                        shaka: async function (video, streamUrl, art) {
                             const player = new shaka.Player(video);
                             activeEngine = player;
-                            
-                            player.load(url).then(() => {
-                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Shaka Player (.mpd)';
-                            }).catch((error) => {
-                                statusText.innerText = 'สถานะ: โหลด DASH ไม่สำเร็จ: ' + error.message;
+
+                            // กำหนดค่าคอนฟิก DRM หากมีการกรอกข้อมูลเข้ามา
+                            if (keyId && key) {
+                                // ตั้งค่า ClearKey DRM
+                                player.configure({
+                                    drm: {
+                                        clearKeys: {
+                                            [keyId]: key
+                                        }
+                                    }
+                                });
+                            } else if (licenseUrl) {
+                                // ตั้งค่า Widevine / FairPlay License Server
+                                player.configure({
+                                    drm: {
+                                        servers: {
+                                            'com.widevine.alpha': licenseUrl,
+                                            'com.apple.fps': licenseUrl // ถ้าเป็น Safari
+                                        }
+                                    }
+                                });
+                            }
+
+                            // จัดการ Error ของ Shaka
+                            player.addEventListener('error', (event) => {
+                                statusText.innerText = 'สถานะ DRM Error: ' + event.detail.message;
                             });
-                        } else {
-                            statusText.innerText = 'สถานะ: เบราว์เซอร์นี้ไม่รองรับ Shaka Player';
+
+                            try {
+                                await player.load(streamUrl);
+                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Shaka Player (รองรับ DRM สำเร็จ)';
+                                art.play();
+                            } catch (error) {
+                                statusText.innerText = 'สถานะ: โหลดสตรีมติด DRM ไม่สำเร็จ: ' + error.message;
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            // ดักจับกรณีเป็นไฟล์ธรรมดา เช่น .mp4
-            art.on('ready', () => {
-                if (!activeEngine) {
-                    statusText.innerText = 'สถานะ: กำลังเล่นผ่าน HTML5 Native';
-                }
-            });
+                // สั่งรัน Custom Type 'shaka'
+                art.switchUrl(url, 'shaka');
+
+            } else {
+                // หากไม่มี DRM ให้ใช้ระบบปกติ (Hls.js / mpegts.js / Native)
+                art = new Artplayer({
+                    container: '#player-container',
+                    url: url,
+                    volume: 0.7,
+                    autoplay: true,
+                    isLive: true,
+                    fullscreen: true,
+                    setting: true,
+                    customType: {
+                        m3u8: function (video, url) {
+                            if (Hls.isSupported()) {
+                                const hls = new Hls();
+                                hls.loadSource(url);
+                                hls.attachMedia(video);
+                                activeEngine = hls;
+                                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                    statusText.innerText = 'สถานะ: กำลังเล่นผ่าน Hls.js (.m3u8)';
+                                    art.play();
+                                });
+                            }
+                        },
+                        ts: function (video, url) {
+                            if (mpegts.isSupported()) {
+                                const player = mpegts.createPlayer({ type: 'mse', isLive: true, url: url });
+                                player.attachMediaElement(video);
+                                player.load();
+                                activeEngine = player;
+                                statusText.innerText = 'สถานะ: กำลังเล่นผ่าน mpegts.js (.ts)';
+                                player.play().catch(() => {});
+                            }
+                        }
+                    }
+                });
+
+                art.on('ready', () => {
+                    if (!activeEngine) {
+                        statusText.innerText = 'สถานะ: กำลังเล่นผ่าน HTML5 Native';
+                    }
+                });
+            }
         }
     </script>
 </body>
