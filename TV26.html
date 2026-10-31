@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>ช่องทางธรรมชาติ</title>
+    <title>ช่องทางธรรมชาติ</title>
     <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
     <script>
         jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
@@ -78,6 +78,20 @@
             border-bottom: 1px solid #333;
         }
 
+        /* ช่องสำหรับวางลิงก์ M3U ภายนอกเสริม (ถ้าต้องการ) */
+        .sidebar-input {
+            margin-bottom: 15px;
+        }
+        .sidebar-input input {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
         /* 📜 รายการกล่องช่องทีวี (เปลี่ยนเป็นแนวตั้ง) */
         #channel-list {
             flex-grow: 1;
@@ -105,10 +119,10 @@
             border: 1px solid #444;
             border-radius: 8px;
             text-align: center;
-            width: 100%; /* เต็มความกว้างของเมนู */
+            width: 100%;
             min-height: 70px;
             display: flex;
-            justify-content: flex-start; /* จัดโลโก้และข้อความเรียงไปทางขวา */
+            justify-content: flex-start;
             align-items: center;
             transition: all 0.2s;
             overflow: hidden;
@@ -130,17 +144,25 @@
             text-overflow: ellipsis;
         }
         .channel:hover, .channel:focus {
-            background: orange;
-            color: black;
-            border-color: #fff;
+            background: #333;
+            border-color: #666;
             transform: scale(1.02);
             outline: none;
         }
 
+        /* ✨ ไฮไลท์ช่องที่กำลังเล่นอยู่ */
+        .channel.active {
+            background: #2a1f00;
+            border-color: orange;
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.4);
+        }
+        .channel.active .channel-name {
+            color: orange;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-
 
     <!-- พื้นที่ดักจับเมาส์ขอบซ้ายจอ -->
     <div class="sidebar-trigger"></div>
@@ -148,6 +170,9 @@
     <!-- เมนูด้านซ้าย (ซ่อนอยู่) -->
     <nav id="sidebar">
         <h2>ช่องทางธรรมชาติ</h2>
+        <div class="sidebar-input">
+            <input type="text" id="m3u-url-input" placeholder="วางลิงก์ .m3u ภายนอก (แล้วกด Enter)" />
+        </div>
         <div id="channel-list"></div>
     </nav>
 
@@ -156,367 +181,96 @@
         <div id="player"></div>
     </div>
 
+    <!-- 🟢 วางข้อมูล M3U ฝังไว้ตรงนี้โดยตรง (สามารถแก้ไขหรือเพิ่มลิสต์ช่องได้ที่นี่) -->
+    <script id="embedded-m3u" type="text/plain">
+#EXTM3U 
+
+
+#EXTINF:-1 tvg-id="" tvg-logo="https://bkk-a.play-rfcdn.ais.th/iptvepg/images/poster/20250716132546006600.png" group-title="ช่องทีวีดิจิตอล", NBT
+#EXTVLCOPT:http-referrer=https://cdn-edge.iiptvcdn.com
+https://cdn-edge.iiptvcdn.com/live_event/smil:f180-054a-38d7-ce66-f7cf.smil/chunklist_w884800294_b3128000.m3u8
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/0014.png" group-title="ช่องทีวีดิจิตอล", ThaiPBS
+#EXTVLCOPT:http-referrer=http://thaipbs-live.cdn.byteark.com/
+http://thaipbs-live.cdn.byteark.com/live/playlist_1080p/index.m3u8
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE//channelicon/ALTV.PNG" group-title="ช่องทีวีดิจิตอล", ALTV
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=dash
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=1e98456bcbea44b7ad05831387e364ef:3d14fd4f9d3149a79b35a7124fccbd67
+https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/4/4.mpd
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/ch5new.logo.png" group-title="ช่องทีวีดิจิตอล", CH5
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=87db4361f7894655a4656e9c8b935a02:b025a4b950df41158a87cfc8d6f2ac34
+https://cri-streamer3.cdn.3bbtv.com:8443/3bb/live/5/5.mpd
+#EXTINF:-1 tvg-id="" tvg-logo="https://58-64-52-73-rewriter.ais-vidnt.com/ais/play/origin/LIVE/channelicon/T-SPorts_7_Final.png"group-title="ช่องทีวีดิจิตอล", T-SPorts7
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=6187523f92b9475bb5b192f70cef1342:5119311f482144d58dacabc5bc1fa4ba
+https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/7/7.mpd
+#EXTINF:-1 tvg-id="" tvg-logo="https://58-64-52-73-rewriter.ais-vidnt.com/ais/play/origin/LIVE//channelicon/0048.png" group-title="ช่องทีวีดิจิตอล", TPTV
+https://tv-live.tpchannel.org/live/tv_1080p.m3u8
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/R2_0053.png" group-title="ช่องทีวีดิจิตอล", TNN16
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=9ebedc957e934d2b9023e4e60b97af73:7bcb4363df74457bbafedec1a864e6b6
+https://cri-streamer3.cdn.3bbtv.com:8443/3bb/live/16/16.mpd
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/22_Nation_2025.png" group-title="ช่องทีวีดิจิตอล", NationTV
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=88b44b9be186449ca5322053d975aa4c:b95b471541994278a1960fd4f85a7ee2
+https://cri-streamer3.cdn.3bbtv.com:8443/3bb/live/22/22.mpd
+#EXTINF:-1 tvg-id="" tvg-logo="https://ais-s.ais-vidnt.com/ais/play/origin/LIVE/channelicon/0015_R.png" group-title="ช่องทีวีดิจิตอล", WorkpointTV
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=dash
+#KODIPROP:inputstream.adaptive.license_type=clearkey
+#KODIPROP:inputstream.adaptive.license_key=8e66726c1191403588f95c0757613ff1:67c26ba7f9b84024944808e01bbe6f47
+https://cco-streamer1.cdn.3bbtv.com:8443/3bb/live/23/23.mpd
+    </script>
+
     <script>
-        // รายการช่องของคุณ (สามารถนำลิสต์ทั้งหมดมาใส่ต่อตรงนี้ได้เลย)
-        const channels = [    
-            {
-                name: "ROCK Action",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "ROCK Entertainment",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "CARTOON NETWORK ",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "CARTOON NITO",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "Nickelodeon",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "Nick Jr",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "BOOM",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "MANGO MOJITO",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "Food Network",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },            
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },
-            {
-                name: "",
-                logo: "",
-                file: "",
-				drm: false
-            },			
-			
-            {
-             name: "BeIN 1 SPORTS FHD",
-                logo: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Logo_bein_sports_1.png/330px-Logo_bein_sports_1.png",
-                file: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd",
-                keyId: "335dad778109954503dcbb21dc92015f",
-                key: "24bfd75d436cbf73168a2a2dccd40281",
-				drm: true
-            },
-            {
-             name: "BeIN 2 SPORTS FHD",
-                logo: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Logo_bein_sports_1.png/330px-Logo_bein_sports_2.png",
-                file: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd",
-                keyId: "0b42be2664d7e811d04f3e504e0924c5",
-                key: "ae24090123b8c72ac5404dc152847cb8",
-				drm: true
-            },
-            {
-             name: "BeIN 3 SPORTS FHD",
-                logo: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Logo_bein_sports_1.png/330px-Logo_bein_sports_3.png",
-                file: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd",
-                keyId: "7995c724a13748ed970840a8ab5bb9b3",
-                key: "67bdaf1e2175b9ff682fcdf0e2354b1e",
-				drm: true
-            },			
-			{
-             name: "MUTV HD",
-                logo: "",
-                file: "http://fr5k.com:8080/9936568318240943/9936568318240943/397633.m3u8",
-				drm: false
-            },
-			{
-                name: "MUTV",
-                logo: "",
-                file: "https://raw.githubusercontent.com/refreshray/refreshray.github.io/refs/heads/main/golo/MUTV.m3u8",
-				drm: false
-            },
-			{
-             name: "SPOTV",
-                logo: "",
-                file: "https://d3b0v7fggu5zwm.cloudfront.net/out/v1/b4814ae93ca84dd3bb5b0aff76ca263f/index.mpd",
-                keyId: "3197f7f5086c4315af2b7a94bc9201cb",
-                key: "17462a74739ae0d9855705ffc2c0e1b5",
-				drm: true
-            },
-			{
-             name: "SPOTV2",
-                logo: "",
-                file: "https://d2tjypxxy769fn.cloudfront.net/out/v1/46d9cf39b9a84183b8d5022ac8f4bc41/index.mpd",
-                keyId: "1539f043249e413d91906036f305831e",
-                key: "671e24fd8d234c7f38d85055815f902a5",
-				drm: true
-            },
-			{
-                name: "SPOTV",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/95/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "SPOTV2",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/96/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "bein Sports 1",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/51/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "bein Sports 2",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/52/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "bein Sports 3",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/53/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "สำรวจโลก",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/94/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "Discovery Channel",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/69/playlist.m3u8",
-				drm: false
-            },
-			{
-             name: "Mono29Plus",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/109/109.mpd",
-                keyId: "072eeb02f6744f838fcc8f0ef36b312e",
-                key: "b797c12f2dd64728aae23fd3c8ef275c",
-				drm: true
-            },
-			 {
-                name: "VIPA FHD",
-                logo: "",
-                file: "https://fastly.live.brightcove.com/1846248737588002042/ap-southeast-1/6075037809001/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJob3N0IjoibzRoaGc2LmVncmVzcy5zYjBmOGsiLCJhY2NvdW50X2lkIjoiNjA3NTAzNzgwOTAwMSIsImVobiI6ImZhc3RseS5saXZlLmJyaWdodGNvdmUuY29tIiwiaXNzIjoiYmxpdmUtcGxheWJhY2stc291cmNlLWFwaSIsInN1YiI6InBhdGhtYXB0b2tlbiIsImF1ZCI6WyI2MDc1MDM3ODA5MDAxIl0sImp0aSI6IjE4NDYyNDg3Mzc1ODgwMDIwNDIifQ.HbjGHxGv87ivAdsCtAdEDjj2SVCfRnCUMYWn2fCkVPY/playlist-hls.m3u8",
-				drm: false
-            },	
-            {
-                name: "3BBAsian",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/101/101.mpd",
-                keyId: "dac6cbd9d17a451bb76386f52469e0e9",
-                key: "2e2ac52cadf843459915eaa1a9b95e48",
-				drm: true
-            },
-			{
-                name: "HBO",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/73/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "HBO Signature",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/72/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "HBO HITS",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/71/playlist.m3u8",
-				drm: false
-            },			
-            {
-             name: "HBOFamily",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/106/106.mpd",
-                keyId: "07b138f30ad3441ca5a2f476e550af25",
-                key: "826ee4deef4b45cfafd5f79a591b15c6",
-				drm: true
-            },
-            {
-             name: "Cinemax",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/107/107.mpd",
-                keyId: "f48caba466394e93b50780f21798787a",
-                key: "9a074a10db4342e7937076b3e52f6029",
-				drm: true
-            },
-			{
-                name: "Warner TV",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/120/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "AXN",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/68/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "Rock Entertainment",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/32/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "Rock Action",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/33/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "TLC",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/78/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "AFN",
-                logo: "",
-                file: "https://hls.iptv-th.workers.dev/live/38/playlist.m3u8",
-				drm: false
-            },
-			{
-                name: "CARTOON NETWORK ",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/301/301.mpd",
-                keyId: "f140b94c73ab4ef5b96da7f49afb1154",
-                key: "85e4ef232c6e460f888eb20f651d66e3",
-				drm: true
-            },
-			{
-                name: "Cartoonito",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/302/302.mpd",
-                keyId: "ad2371259d34404cb89d54a4dc88dcd3",
-                key: "1ba155e345c4456ba891cbee9b3e1c4c",
-				drm: true
-            },
-            {
-                name: "Nickelodeo",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/303/303.mpd",
-                keyId: "9130a6448a74430794d355b48b56a64c",
-                key: "c2f4d3288cdb43cf81e519ceb414dd6f",
-				drm: true
-            },
-            {
-                name: "Nickjr",
-                logo: "",
-                file: "https://udn-streamer1.cdn.3bbtv.com:8443/3bb/live/304/304.mpd",
-                keyId: "641c3f0e676d49d18c2082e093380e69",
-                key: "e06f3a2e327643249c3831ab199c4015",
-				drm: true
-            },		
-			{
-                name: "Food_Network",
-                logo: "",
-                file: "https://cri-streamer3.cdn.3bbtv.com:8443/3bb/live/205/205.mpd",
-                keyId: "d4b9d55410d24905920e57664a047116",
-                key: "d821110f280f4545ae0227d5784af199",
-				drm: true
+        let channels = [];
+        let activeChannelDiv = null;
 
-        	}
-			
-        ];
+        // ฟังก์ชันแปลงข้อความ M3U เป็นอาเรย์ของช่อง
+        function parseM3U(m3uText) {
+            const lines = m3uText.split('\n');
+            const parsedChannels = [];
+            let currentChannel = {};
 
-        function loadPlayer(channel) {
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('#EXTINF:')) {
+                    currentChannel = {};
+                    
+                    // ดึงชื่อช่อง
+                    const nameMatch = line.match(/,(.+)$/);
+                    if (nameMatch) {
+                        currentChannel.name = nameMatch[1].trim();
+                    }
+
+                    // ดึง Logo (ถ้ามี)
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    if (logoMatch && logoMatch[1]) {
+                        currentChannel.logo = logoMatch[1];
+                    } else {
+                        currentChannel.logo = "";
+                    }
+                } else if (line && !line.startsWith('#')) {
+                    currentChannel.file = line;
+                    
+                    // เช็คประเภทไฟล์ว่าเป็น .mpd (DRM) หรือ .m3u8 (HLS)
+                    if (line.endsWith('.mpd') || line.includes('.mpd')) {
+                        currentChannel.drm = true;
+                        currentChannel.keyId = "x"; // สามารถแก้ไข KeyId ที่นี่หรือปรับเพิ่มใน M3U
+                        currentChannel.key = "x";     // สามารถแก้ไข Key ที่นี่
+                    } else {
+                        currentChannel.drm = false;
+                    }
+                    parsedChannels.push(currentChannel);
+                }
+            }
+            return parsedChannels;
+        }
+
+        // ฟังก์ชันโหลด Player และจัดการไฮไลท์ช่อง
+        function loadPlayer(channel, element) {
             const config = {
                 file: channel.file,
                 width: "100%",
@@ -525,53 +279,87 @@
                 mute: false
             };
 
-            // ถ้าเป็นไฟล์ .mpd + drm
             if (channel.drm) {
                 config.type = "dash";
                 config.drm = {
-                    clearkey: {   /* ✅ แก้ไขจุดนี้เรียบร้อยแล้ว */
+                    clearkey: {
                         keyId: channel.keyId,
                         key: channel.key
                     }
                 };
             } else {
-                // ถ้าไฟล์ .m3u8 (HLS)
                 config.type = "hls";
             }
 
             jwplayer("player").setup(config);
+
+            // จัดการเปลี่ยนสถานะ Highlight
+            if (activeChannelDiv) {
+                activeChannelDiv.classList.remove("active");
+            }
+            if (element) {
+                element.classList.add("active");
+                activeChannelDiv = element;
+            }
         }
 
-        // สร้างปุ่มเลือกช่องภายใน Sidebar ลิสต์แนวตั้ง
-        const channelList = document.getElementById("channel-list");
-        channels.forEach((channel, idx) => {
-            const div = document.createElement("div");
-            div.className = "channel";
-            div.tabIndex = idx + 1; // รองรับการกดปุ่มเลื่อนที่รีโมททีวี
-            
-            // ตรวจสอบโลโก้ ถ้าไม่มีให้สร้างกล่องเปล่าไว้กันพื้นที่เบี้ยว
-            const logoHtml = channel.logo 
-                ? `<img src="${channel.logo}" alt="${channel.name}">`
-                : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
-            
-            div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
-            
-            // คลิกหรือกดเลือกช่อง
-            div.onclick = () => loadPlayer(channel);
-            div.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') loadPlayer(channel);
-            });
-            
-            channelList.appendChild(div);
-        });
+        // ฟังก์ชันสร้างรายการช่องลงในหน้าเว็บ
+        function renderChannelList(channelArray) {
+            const channelList = document.getElementById("channel-list");
+            channelList.innerHTML = "";
+            channels = channelArray;
 
-        // เมื่อกดปุ่มเริ่มต้นเล่นตรงกลางจอ
-        document.getElementById("startPlayback").onclick = () => {
-            if(channels.length > 0) {
-                loadPlayer(channels[0]); // เล่นช่องแรกเป็น default
+            channels.forEach((channel, idx) => {
+                const div = document.createElement("div");
+                div.className = "channel";
+                div.tabIndex = idx + 1;
+                
+                const logoHtml = channel.logo  
+                    ? `<img src="${channel.logo}" alt="${channel.name}">`
+                    : `<div style="width:50px; height:40px; background:#333; border-radius:4px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#aaa;">No Pix</div>`;
+                
+                div.innerHTML = logoHtml + `<span class="channel-name">${channel.name}</span>`;
+                
+                div.onclick = () => loadPlayer(channel, div);
+                div.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') loadPlayer(channel, div);
+                });
+                
+                channelList.appendChild(div);
+            });
+
+            // เล่นช่องแรกทันทีเมื่อโหลดเสร็จ (ถ้ามีข้อมูล)
+            if (channels.length > 0) {
+                loadPlayer(channels[0], channelList.firstChild);
             }
-            document.getElementById("startPlayback").style.display = "none";
-        };
+        }
+
+        // โหลดข้อมูล M3U ที่ฝังไว้ตั้งแต่เริ่มเปิดหน้าเว็บ
+        const embeddedM3UText = document.getElementById("embedded-m3u").textContent;
+        const initialChannels = parseM3U(embeddedM3UText);
+        renderChannelList(initialChannels);
+
+        // รองรับการดึง M3U จากลิงก์ภายนอกผ่านช่องกรอก (ถ้าต้องการเปลี่ยนหรือเพิ่ม)
+        document.getElementById("m3u-url-input").addEventListener("keypress", async function(e) {
+            if (e.key === 'Enter') {
+                const url = this.value.trim();
+                if (!url) return;
+                try {
+                    const response = await fetch(url);
+                    const text = await response.text();
+                    const newChannels = parseM3U(text);
+                    if (newChannels.length > 0) {
+                        renderChannelList(newChannels);
+                        alert("โหลดรายการช่องจากลิงก์สำเร็จ!");
+                    } else {
+                        alert("ไม่พบข้อมูลช่องในลิงก์นี้");
+                    }
+                } catch (err) {
+                    alert("ไม่สามารถดึงข้อมูลจากลิงก์ได้ (อาจติดปัญหา CORS Policy)");
+                    console.error(err);
+                }
+            }
+        });
     </script>
 </body>
 </html>
