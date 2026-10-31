@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV "IPTV ช่องทางธรรมชาติ"</title>
+    <script src="https://ssl.p.jwpcdn.com/player/v/8.26.0/jwplayer.js"></script>
+    <script>
+        jwplayer.key = 'XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo';
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: #111;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        h2 {
+            color: orange;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* เมนูด้านซ้าย */
+        #sidebar {
+            width: 280px;
+            background: #111;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 10;
+        }
+
+        #sidebar.hidden {
+            transform: translateX(-100%);
+            position: absolute;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #222;
+            background: #1a1a1a;
+        }
+
+        #channel-list {
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .channel {
+            cursor: pointer;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 6px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s, border-color 0.2s;
+            overflow: hidden;
+        }
+
+        .channel img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .channel:hover {
+            background: #333;
+        }
+
+        /* ไฮไลท์ช่องที่กำลังเล่น */
+        .channel.active {
+            background: #2a1f00;
+            border-color: orange;
+            box-shadow: 0 0 8px rgba(255, 165, 0, 0.4);
+        }
+
+        /* พื้นที่เล่นวิดีโอฝั่งขวา */
+        #content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            position: relative;
+            padding: 20px;
+        }
+
+        #player {
+            width: 100%;
+            height: 100%;
+            max-height: 80vh;
+            aspect-ratio: 16/9;
+        }
+
+        .btn {
+            background: orange;
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        #startPlayback {
+            margin-top: 15px;
+        }
+
+        /* Responsive สำหรับมือถือ */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            #sidebar {
+                width: 100%;
+                height: 200px;
+            }
+            #sidebar.hidden {
+                transform: translateY(-100%);
+                position: absolute;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>IPTV ช่องทางธรรมชาติ</h2>
+        <button class="btn" id="toggle-sidebar">📂 ซ่อน/แสดงเมนู</button>
+    </header>
+
+    <div class="main-container">
+        <!-- เมนูด้านซ้าย -->
+        <div id="sidebar">
+            <div class="sidebar-header">รายการช่อง</div>
+            <div id="channel-list"></div>
+        </div>
+
+        <!-- หน้าจอเล่นวิดีโอฝั่งขวา -->
+        <div id="content-area">
+            <div id="player"></div>
+            <button id="startPlayback" class="btn">▶ เริ่มเล่นช่องแรก</button>
+        </div>
+    </div>
+
+    <script>
+        const channels = [
+            {
+                name: ",
+                logo: "",
+                file: "https://edge-1.m-fixer.net:8092/stream/ais/hbosignature/master.m3u8",
+                drm: false
+            },
+            {
+                name: ",
+                logo: "",
+                file: "https://edge-1.m-fixer.net:8092/stream/ais/hbofamily/master.m3u8",
+                drm: false
+            }, 
+            {
+                name: "29Plus",
+                logo: "",
+                file: "https://udn-streamer1.cdn.xxxxxx.mpd",
+                keyId: "xxxx",
+                key: "xxxxxx",
+                drm: true
+            }
+            // เพิ่มช่องอื่นๆ ตามต้องการ
+        ];
+
+        let activeChannelDiv = null;
+
+        function loadPlayer(channel, element) {
+            const config = {
+                file: channel.file,
+                width: "100%",
+                height: "100%",
+                autostart: true,
+                mute: false
+            };
+
+            if (channel.drm) {
+                config.type = "dash";
+                config.drm = {
+                    clearkey: {
+                        keyId: channel.keyId,
+                        key: channel.key
+                    }
+                };
+            } else {
+                config.type = "hls";
+            }
+
+            jwplayer("player").setup(config);
+
+            // จัดการไฮไลท์ช่องที่เลือก
+            if (activeChannelDiv) {
+                activeChannelDiv.classList.remove("active");
+            }
+            if (element) {
+                element.classList.add("active");
+                activeChannelDiv = element;
+            }
+        }
+
+        const channelList = document.getElementById("channel-list");
+        channels.forEach((channel, idx) => {
+            const div = document.createElement("div");
+            div.className = "channel";
+            const logoHtml = channel.logo  
+                ? `<img src="${channel.logo}" alt="${channel.name}">`
+                : `<div style="width:40px;height:40px;background:#444;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;">TV</div>`;
+            
+            div.innerHTML = logoHtml + `<span>${channel.name}</span>`;
+            
+            div.onclick = () => {
+                loadPlayer(channel, div);
+            };
+            channelList.appendChild(div);
+        });
+
+        // ปุ่มเริ่มเล่น
+        document.getElementById("startPlayback").onclick = () => {
+            const firstChannelDiv = channelList.firstChild;
+            loadPlayer(channels[0], firstChannelDiv);
+            document.getElementById("startPlayback").style.display = "none";
+        };
+
+        // ปุ่มซ่อน/แสดงเมนู
+        document.getElementById("toggle-sidebar").onclick = () => {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("hidden");
+        };
+    </script>
+</body>
+</html>
